@@ -1,32 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
-    // Simulate login process
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
-    // For demo purposes, redirect to dashboard
-    router.push("/dashboard")
-    setIsLoading(false)
-  }
+    if (res?.error) {
+      toast.error("Failed to login");
+      setIsLoading(false);
+      return;
+    }
+    router.push("/dashboard");
+  };
 
   return (
     <Card className="border-border shadow-sm">
@@ -77,5 +89,5 @@ export function LoginForm() {
         </CardFooter>
       </form>
     </Card>
-  )
+  );
 }
