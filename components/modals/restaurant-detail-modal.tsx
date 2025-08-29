@@ -45,6 +45,12 @@ interface RestaurantDetailModalProps {
   onSave: () => void;
 }
 
+function generateRandomString() {
+  const timestamp = Date.now().toString(16);
+  const random = Math.floor(Math.random() * 1e16).toString(16);
+  return `${timestamp}-${random}`;
+}
+
 export function RestaurantDetailModal({
   initRestaurant,
   isOpen,
@@ -86,7 +92,7 @@ export function RestaurantDetailModal({
             activity: newActivity,
             createdAt: new Date(),
             description: "",
-            id: `${crypto.randomUUID()}-new-activity`,
+            id: `${generateRandomString()}-new-activity`,
             type: activityType,
             user: {
               id: user.id,
