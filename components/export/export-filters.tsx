@@ -64,10 +64,6 @@ export function ExportFilters({
     { id: "companyName", label: "Company Name" },
     { id: "companyWebsite", label: "Company Website" },
     { id: "companyIndustry", label: "Company Industry" },
-    { id: "latestNote", label: "Latest Note" },
-    { id: "latestActivity", label: "Latest Activity" },
-    { id: "latestActivityType", label: "Activity Type" },
-    { id: "latestActivityDescription", label: "Activity Description" },
   ];
 
   const handleFieldToggle = (fieldId: string, checked: boolean) => {
