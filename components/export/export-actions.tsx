@@ -1,74 +1,184 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react"
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileSpreadsheet, FileText, Download, Database } from "lucide-react";
+import type { ExportFilters } from "./export-filters";
+import { toast } from "react-toastify";
 
-export function ExportActions() {
-  const [isExporting, setIsExporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState<string | null>(null)
+interface ExportActionsProps {
+  filters: ExportFilters;
+  totalRecords: number;
+}
 
-  const handleExport = async (format: "csv" | "excel") => {
-    setIsExporting(true)
-    setExportFormat(format)
+export function ExportActions({ filters, totalRecords }: ExportActionsProps) {
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<string | null>(null);
 
-    // Simulate export process
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+  const handleExport = async (format: "csv" | "excel" | "json") => {
+    if (!filters.selectedFields.length) {
+      toast.error("Please select at least one field to export");
+      return;
+    }
 
-    // In a real app, this would trigger the actual export
-    console.log(`Exporting data as ${format}`)
+    if (totalRecords === 0) {
+      toast.error("No data available for export");
+      return;
+    }
 
-    setIsExporting(false)
-    setExportFormat(null)
-  }
+    setIsExporting(true);
+    setExportFormat(format);
+
+    try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        format,
+        fields: filters.selectedFields.join(","),
+        status: filters.status,
+        rating: filters.rating,
+        location: filters.location,
+      });
+
+      // Add date range if available
+      if (filters.dateRange?.from) {
+        params.append("dateFrom", filters.dateRange.from.toISOString());
+      }
+      if (filters.dateRange?.to) {
+        params.append("dateTo", filters.dateRange.to.toISOString());
+      }
+
+      const downloadUrl = `/api/export?${params.toString()}`;
+
+      // Create temporary link and trigger download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `restaurant-leads-${
+        new Date().toISOString().split("T")[0]
+      }.${format === "excel" ? "xlsx" : format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Data exported successfully as ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error("Failed to export data. Please try again.");
+    } finally {
+      setIsExporting(false);
+      setExportFormat(null);
+    }
+  };
+
+  const getFormatIcon = (format: string) => {
+    switch (format) {
+      case "csv":
+        return <FileText className="h-5 w-5" />;
+      case "excel":
+        return <FileSpreadsheet className="h-5 w-5" />;
+      case "json":
+        return <Database className="h-5 w-5" />;
+      default:
+        return <Download className="h-5 w-5" />;
+    }
+  };
+
+  const getFormatLabel = (format: string) => {
+    switch (format) {
+      case "csv":
+        return "Export as CSV";
+      case "excel":
+        return "Export as Excel";
+      case "json":
+        return "Export as JSON";
+      default:
+        return "Export";
+    }
+  };
 
   return (
     <Card className="border-border">
       <CardHeader>
         <CardTitle>Export Actions</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Download your filtered data in various formats. Available records:{" "}
+          {totalRecords.toLocaleString()}
+        </p>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* CSV Export */}
           <Button
             onClick={() => handleExport("csv")}
-            disabled={isExporting}
-            className="h-20 flex flex-col items-center justify-center space-y-2 bg-primary hover:bg-primary/90 text-primary-foreground"
+            disabled={isExporting || totalRecords === 0}
+            className="h-16 flex flex-col items-center justify-center space-y-2"
+            variant="outline"
           >
             {isExporting && exportFormat === "csv" ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
             ) : (
-              <FileText className="h-6 w-6" />
+              getFormatIcon("csv")
             )}
-            <span className="text-sm font-medium">
-              {isExporting && exportFormat === "csv" ? "Exporting..." : "Export as CSV"}
-            </span>
+            <span className="text-sm">{getFormatLabel("csv")}</span>
           </Button>
 
+          {/* Excel Export */}
           <Button
             onClick={() => handleExport("excel")}
-            disabled={isExporting}
+            disabled={isExporting || totalRecords === 0}
+            className="h-16 flex flex-col items-center justify-center space-y-2"
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center space-y-2"
           >
             {isExporting && exportFormat === "excel" ? (
-              <Loader2 className="h-6 w-6 animate-spin" />
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
             ) : (
-              <FileSpreadsheet className="h-6 w-6" />
+              getFormatIcon("excel")
             )}
-            <span className="text-sm font-medium">
-              {isExporting && exportFormat === "excel" ? "Exporting..." : "Export as Excel"}
-            </span>
+            <span className="text-sm">{getFormatLabel("excel")}</span>
+          </Button>
+
+          {/* JSON Export */}
+          <Button
+            onClick={() => handleExport("json")}
+            disabled={isExporting || totalRecords === 0}
+            className="h-16 flex flex-col items-center justify-center space-y-2"
+            variant="outline"
+          >
+            {isExporting && exportFormat === "json" ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+            ) : (
+              getFormatIcon("json")
+            )}
+            <span className="text-sm">{getFormatLabel("json")}</span>
           </Button>
         </div>
 
-        <div className="mt-4 p-4 bg-muted rounded-lg">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Download className="h-4 w-4" />
-            <span>Estimated records to export: 1,247 restaurants</span>
+        {/* Export Info */}
+        <div className="mt-4 p-3 bg-muted rounded-lg">
+          <div className="text-sm text-muted-foreground">
+            <p>
+              <strong>Export Info:</strong>
+            </p>
+            <ul className="list-disc list-inside mt-1 space-y-1">
+              <li>Selected Fields: {filters.selectedFields.length}</li>
+              <li>
+                Status Filter:{" "}
+                {filters.status === "all"
+                  ? "All Statuses"
+                  : filters.status.charAt(0).toUpperCase() +
+                    filters.status.slice(1)}
+              </li>
+              <li>Total Records: {totalRecords.toLocaleString()}</li>
+              {filters.dateRange?.from && (
+                <li>
+                  Date Range: {filters.dateRange.from.toLocaleDateString()} -{" "}
+                  {filters.dateRange.to?.toLocaleDateString() || "Today"}
+                </li>
+              )}
+            </ul>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
