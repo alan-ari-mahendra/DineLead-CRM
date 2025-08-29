@@ -8,6 +8,11 @@ import { Zap } from "lucide-react";
 export default function OpenScrapingModalButton() {
   const [isScrapingModalOpen, setIsScrapingModalOpen] = useState(false);
 
+  const handleJobAdded = () => {
+    // This will be called when a new job is added
+    // The scraping jobs page will automatically refresh via the custom event
+  };
+
   return (
     <>
       <Button
@@ -20,6 +25,7 @@ export default function OpenScrapingModalButton() {
       <ScrapingModal
         isOpen={isScrapingModalOpen}
         onClose={() => setIsScrapingModalOpen(false)}
+        onJobAdded={handleJobAdded}
       />
     </>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +9,10 @@ import {
   XCircle,
   Play,
   MoreHorizontal,
+  RefreshCw,
 } from "lucide-react";
 import OpenScrapingModalButton from "@/components/scrape-job/openScrapingModalButton";
-import axios from "axios";
-import { notFound } from "next/navigation";
-import { getCookies } from "@/app/action";
+import { useState, useEffect, useCallback } from "react";
 import {
   Pagination,
   PaginationContent,
@@ -29,83 +30,173 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
-const getScrapingJobs = async (page: number = 1, limit: number = 10) => {
-  try {
-    const cookieString = await getCookies();
-    const response = await axios.get(
-      `${process.env.NEXTAUTH_URL}/api/scraping-job?page=${page}&limit=${limit}`,
-      {
-        headers: {
-          Cookie: cookieString,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Failed to fetch scraping jobs:", error);
-    notFound();
-  }
-};
-
-function formatDuration(start: string, end?: string | null) {
-  if (!end) return "-";
-  const diff = new Date(end).getTime() - new Date(start).getTime();
-  if (diff <= 0) return "-";
-
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  return `${minutes}m ${remainingSeconds}s`;
+interface ScrapingJob {
+  id: string;
+  keyword: string;
+  location: string;
+  status: string;
+  createdAt: string;
+  completedAt?: string | null;
 }
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleString("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
+interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  lastPage: number;
+}
+
+export default function ScrapingJobsPage() {
+  const [jobs, setJobs] = useState<ScrapingJob[]>([]);
+  const [meta, setMeta] = useState<PaginationMeta>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    lastPage: 1,
   });
-}
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "COMPLETED":
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
-    case "RUNNING":
-      return <Play className="h-4 w-4 text-blue-600" />;
-    case "FAILED":
-      return <XCircle className="h-4 w-4 text-red-600" />;
-    case "PENDING":
-      return <Clock className="h-4 w-4 text-yellow-600" />;
-    default:
-      return <Clock className="h-4 w-4 text-gray-600" />;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const page = Number(searchParams.get("page") || 1);
+
+  // Fetch scraping jobs
+  const fetchScrapingJobs = useCallback(async (pageNum: number = 1) => {
+    try {
+      const response = await fetch(
+        `/api/scraping-job?page=${pageNum}&limit=10`
+      );
+      if (!response.ok) throw new Error("Failed to fetch scraping jobs");
+
+      const data = await response.json();
+      setJobs(data.data);
+      setMeta(data.meta);
+    } catch (error) {
+      console.error("Failed to fetch scraping jobs:", error);
+      toast.error("Failed to fetch scraping jobs");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchScrapingJobs(page);
+  }, [page, fetchScrapingJobs]);
+
+  // Refresh data (for new jobs)
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchScrapingJobs(page);
+  }, [page, fetchScrapingJobs]);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    router.push(`/scraping-jobs?page=${newPage}`);
+  };
+
+  // Listen for new scraping job events
+  useEffect(() => {
+    const handleNewJob = () => {
+      // Refresh data when new job is added
+      handleRefresh();
+    };
+
+    // Listen for custom event from scraping modal
+    window.addEventListener("scraping-job-added", handleNewJob);
+
+    return () => {
+      window.removeEventListener("scraping-job-added", handleNewJob);
+    };
+  }, [handleRefresh]);
+
+  // Auto-refresh every 30 seconds for real-time status updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Only auto-refresh if not currently refreshing and not on first load
+      if (!isRefreshing && !isLoading) {
+        fetchScrapingJobs(page);
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [page, fetchScrapingJobs, isRefreshing, isLoading]);
+
+  function formatDuration(start: string, end?: string | null) {
+    if (!end) return "-";
+    const diff = new Date(end).getTime() - new Date(start).getTime();
+    if (diff <= 0) return "-";
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${minutes}m ${remainingSeconds}s`;
   }
-};
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "COMPLETED":
-      return "bg-green-100 text-green-800";
-    case "RUNNING":
-      return "bg-blue-100 text-blue-800";
-    case "FAILED":
-      return "bg-red-100 text-red-800";
-    case "PENDING":
-      return "bg-yellow-100 text-yellow-800";
-    default:
-      return "bg-gray-100 text-gray-800";
+  function formatDate(date: string) {
+    return new Date(date).toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
   }
-};
 
-export default async function ScrapingJobsPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ page?: string }>;
-}) {
-  const params = await searchParams;
-  const page = Number(params?.page || 1);
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "RUNNING":
+        return <Play className="h-4 w-4 text-blue-600" />;
+      case "FAILED":
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case "PENDING":
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-600" />;
+    }
+  };
 
-  const { data: jobs, meta } = await getScrapingJobs(page, 10);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "COMPLETED":
+        return "bg-green-100 text-green-800";
+      case "RUNNING":
+        return "bg-blue-100 text-blue-800";
+      case "FAILED":
+        return "bg-red-100 text-red-800";
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Scraping Jobs
+            </h1>
+            <p className="text-gray-600">
+              Monitor and manage your data scraping operations.
+            </p>
+          </div>
+          <OpenScrapingModalButton />
+        </div>
+
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -118,11 +209,24 @@ export default async function ScrapingJobsPage({
             Monitor and manage your data scraping operations.
           </p>
         </div>
-        <OpenScrapingModalButton />
+        <div className="flex items-center space-x-3">
+          <Button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+          <OpenScrapingModalButton />
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {jobs.map((job: any) => (
+        {jobs.map((job: ScrapingJob) => (
           <Link
             key={job.id}
             href={`/scraping-jobs/${job.id}`}
@@ -160,7 +264,7 @@ export default async function ScrapingJobsPage({
                         <p className="text-xs text-gray-500 text-center">
                           Started
                         </p>
-                        <p className="text-sm text-gray-900 text-center">
+                        <p className="text-sm font-medium text-gray-900 text-center">
                           {formatDate(job.createdAt)}
                         </p>
                       </div>
@@ -200,8 +304,7 @@ export default async function ScrapingJobsPage({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M9 17v-2h6v2m-7-8h8M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 
-        2 0 01-2-2V9a2 2 0 012-2z"
+                d="M9 17v-2h6v2m-7-8h8M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"
               />
             </svg>
             <p className="text-lg font-medium">No Data To Display</p>
@@ -219,8 +322,12 @@ export default async function ScrapingJobsPage({
               {/* Previous */}
               <PaginationItem>
                 <PaginationPrevious
-                  href={`?page=${page - 1}`}
-                  className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+                  onClick={() => handlePageChange(page - 1)}
+                  className={
+                    page <= 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
                 />
               </PaginationItem>
 
@@ -228,7 +335,11 @@ export default async function ScrapingJobsPage({
               {Array.from({ length: meta.lastPage }, (_, i) => i + 1).map(
                 (p) => (
                   <PaginationItem key={p}>
-                    <PaginationLink href={`?page=${p}`} isActive={p === page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(p)}
+                      isActive={p === page}
+                      className="cursor-pointer"
+                    >
                       {p}
                     </PaginationLink>
                   </PaginationItem>
@@ -244,11 +355,11 @@ export default async function ScrapingJobsPage({
               {/* Next */}
               <PaginationItem>
                 <PaginationNext
-                  href={`?page=${page + 1}`}
+                  onClick={() => handlePageChange(page + 1)}
                   className={
                     page >= meta.lastPage
                       ? "pointer-events-none opacity-50"
-                      : ""
+                      : "cursor-pointer"
                   }
                 />
               </PaginationItem>

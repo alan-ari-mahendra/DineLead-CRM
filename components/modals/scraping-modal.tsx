@@ -22,9 +22,14 @@ import { getCookies } from "@/app/action";
 interface ScrapingModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onJobAdded?: () => void;
 }
 
-export function ScrapingModal({ isOpen, onClose }: ScrapingModalProps) {
+export function ScrapingModal({
+  isOpen,
+  onClose,
+  onJobAdded,
+}: ScrapingModalProps) {
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [radius, setRadius] = useState("1");
@@ -62,15 +67,26 @@ export function ScrapingModal({ isOpen, onClose }: ScrapingModalProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    await searchRestaurants();
+    try {
+      await searchRestaurants();
 
-    setIsLoading(false);
-    onClose();
+      // Dispatch custom event to notify scraping jobs page
+      window.dispatchEvent(new CustomEvent("scraping-job-added"));
 
-    // Reset form
-    setLocation("");
-    setCategory("");
-    setRadius("1");
+      // Call the callback if provided
+      onJobAdded?.();
+
+      // Reset form
+      setLocation("");
+      setCategory("");
+      setRadius("1");
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to submit scraping job:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
