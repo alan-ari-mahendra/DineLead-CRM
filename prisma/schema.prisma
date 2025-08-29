@@ -15,8 +15,119 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(uuid())
+  id       String @id @default(uuid()) @db.Uuid
   name     String
   email    String @unique
   password String
+  role     String 
+
+  company  Company[]
+  lead     Lead[]
+  scrapingJob ScrapingJob[]
+  leadNotes LeadNotes[]
+  leadActivity LeadActivity[]
+}
+
+model Company{
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @db.Uuid
+  name     String @unique
+  website  String
+  industry String[]
+  scrapingDataId String @db.Uuid
+
+  lead     Lead[]
+
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scrapingData       ScrapingData @relation(fields: [scrapingDataId], references: [id], onDelete: Cascade)
+}
+
+model Lead{
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @db.Uuid
+  companyId     String  @db.Uuid
+  name          String  @unique
+  phone         String
+  email         String
+  address       String
+  source        String
+  rating        Float
+  reviewCount   Int
+  leadStatusId  String  @db.Uuid
+  scrapingDataId String @db.Uuid
+
+  leadNotes LeadNotes[]
+  leadActivity LeadActivity[]
+
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company       Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leadStatus    LeadStatus @relation(fields: [leadStatusId], references: [id], onDelete: Cascade)
+  scrapingData       ScrapingData @relation(fields: [scrapingDataId], references: [id], onDelete: Cascade)
+}
+
+model LeadStatus{
+  id        String @id @default(uuid()) @db.Uuid
+  name      String @unique
+  
+  lead      Lead[]
+}
+
+model LeadNotes{
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @db.Uuid
+  leadId        String  @db.Uuid
+  notes         String  @db.Text
+  createdAt     DateTime @default(now())
+
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead          Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+model LeadActivity{
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @db.Uuid
+  leadId        String  @db.Uuid
+  type          String
+  activity      String  @db.Text
+  description   String  @db.Text
+  createdAt     DateTime @default(now())
+
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead          Lead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+}
+
+
+model ScrapingJob{
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  jobId       Int
+  keyword     String
+  location    String
+  status      String
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  scrapingData ScrapingData[]
+
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ScrapingData{
+  id            String   @id @default(uuid()) @db.Uuid
+  scrapingJobId String   @db.Uuid
+  name          String
+  email         String
+  address       String
+  phone         String
+  website       String
+  source        String
+  industry      String[]
+  rating        Float
+  reviewCount   Int
+  hasBeenAdded  Boolean  @default(false)
+
+  lead          Lead[]
+  company       Company[]
+
+  scrapingJob          ScrapingJob    @relation(fields: [scrapingJobId], references: [id], onDelete: Cascade)
 }

@@ -1,109 +1,123 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Eye, Edit, Download } from "lucide-react"
-import { RestaurantDetailModal } from "@/components/modals/restaurant-detail-modal"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Eye, Edit, Download } from "lucide-react";
+import { RestaurantDetailModal } from "@/components/modals/restaurant-detail-modal";
+import { MetaPagination } from "@/types/paginationMeta.type";
+import { Restaurant } from "@/types/restaurant.type";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import { toast } from "react-toastify";
 
-// Mock data
-const restaurants = [
-  {
-    id: 1,
-    name: "Warung Padang Sederhana",
-    address: "Jl. Sudirman No. 123, Jakarta",
-    phone: "+62 21 1234567",
-    rating: 4.5,
-    status: "prospect",
-  },
-  {
-    id: 2,
-    name: "Sate Ayam Pak Budi",
-    address: "Jl. Malioboro No. 45, Yogyakarta",
-    phone: "+62 274 987654",
-    rating: 4.2,
-    status: "contacted",
-  },
-  {
-    id: 3,
-    name: "Bakso Solo Enaknya",
-    address: "Jl. Pahlawan No. 78, Solo",
-    phone: "+62 271 456789",
-    rating: 4.8,
-    status: "closed",
-  },
-  {
-    id: 4,
-    name: "Nasi Gudeg Bu Tjitro",
-    address: "Jl. Tugu No. 12, Yogyakarta",
-    phone: "+62 274 123456",
-    rating: 4.6,
-    status: "prospect",
-  },
-  {
-    id: 5,
-    name: "Ayam Geprek Bensu",
-    address: "Jl. Kemang Raya No. 89, Jakarta",
-    phone: "+62 21 987654",
-    rating: 4.3,
-    status: "contacted",
-  },
-]
+interface Props {
+  restaurant: Restaurant[];
+  metaPagination: MetaPagination;
+}
 
-export function RestaurantTable() {
-  const [selectedRestaurants, setSelectedRestaurants] = useState<number[]>([])
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+export function RestaurantTable({ restaurant, metaPagination }: Props) {
+  const [selectedRestaurants, setSelectedRestaurants] = useState<string[]>([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const router = useRouter();
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedRestaurants(restaurants.map((r) => r.id))
+      setSelectedRestaurants(restaurant.map((r) => r.id));
     } else {
-      setSelectedRestaurants([])
+      setSelectedRestaurants([]);
     }
-  }
+  };
 
-  const handleSelectRestaurant = (id: number, checked: boolean) => {
+  const handleSelectRestaurant = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedRestaurants([...selectedRestaurants, id])
+      setSelectedRestaurants([...selectedRestaurants, id]);
     } else {
-      setSelectedRestaurants(selectedRestaurants.filter((rid) => rid !== id))
+      setSelectedRestaurants(selectedRestaurants.filter((rid) => rid !== id));
     }
-  }
+  };
 
   const handleViewDetail = (restaurant: any) => {
-    setSelectedRestaurant(restaurant)
-    setIsDetailModalOpen(true)
-  }
+    setSelectedRestaurant(restaurant);
+    setIsDetailModalOpen(true);
+  };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
     const variants = {
       prospect: "bg-blue-100 text-blue-800 border-blue-200",
       contacted: "bg-yellow-100 text-yellow-800 border-yellow-200",
       closed: "bg-green-100 text-green-800 border-green-200",
-    }
-    return variants[status as keyof typeof variants] || variants.prospect
-  }
+    };
+    return variants[status as keyof typeof variants] || variants.prospect;
+  };
 
   const handleExportSelected = () => {
-    // In a real app, this would export the selected restaurants
-    console.log("Exporting selected restaurants:", selectedRestaurants)
-  }
+    const selectedData = restaurant.filter((r) =>
+      selectedRestaurants.includes(r.id)
+    );
+    const csv = [
+      ["Name", "Address", "Phone", "Email", "Source"].join(","),
+      ...selectedData.map((r) =>
+        [r.name, r.address, r.phone, r.email, r.source].join(",")
+      ),
+    ].join("\n");
 
-  const handleStatusUpdate = (restaurantId: number, newStatus: string) => {
-    // In a real app, this would make an API call to update the status
-    console.log(`Updating restaurant ${restaurantId} status to ${newStatus}`)
-  }
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "restaurants.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleStatusUpdate = async (
+    restaurantId: string,
+    newStatus: string
+  ) => {
+    try {
+      await axios.put(`${process.env.NEXT_PUBLIC_URL}/api/restaurant`, {
+        leadId: restaurantId,
+        status: newStatus.charAt(0).toUpperCase() + newStatus.slice(1),
+      });
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed while update status");
+    }
+  };
 
   return (
     <>
       <div className="space-y-4">
         {selectedRestaurants.length > 0 && (
           <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
-            <span className="text-sm text-muted-foreground">{selectedRestaurants.length} restaurant(s) selected</span>
+            <span className="text-sm text-muted-foreground">
+              {selectedRestaurants.length} restaurant(s) selected
+            </span>
             <Button onClick={handleExportSelected} size="sm" variant="outline">
               <Download className="h-4 w-4 mr-2" />
               Export Selected
@@ -117,39 +131,42 @@ export function RestaurantTable() {
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={selectedRestaurants.length === restaurants.length}
+                    checked={selectedRestaurants.length === restaurant.length}
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
                 <TableHead>Restaurant Name</TableHead>
                 <TableHead>Address</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Rating</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-12">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {restaurants.map((restaurant) => (
-                <TableRow key={restaurant.id}>
+              {restaurant.map((r) => (
+                <TableRow key={r.id}>
                   <TableCell>
                     <Checkbox
-                      checked={selectedRestaurants.includes(restaurant.id)}
-                      onCheckedChange={(checked) => handleSelectRestaurant(restaurant.id, checked as boolean)}
+                      checked={selectedRestaurants.includes(r.id)}
+                      onCheckedChange={(checked) =>
+                        handleSelectRestaurant(r.id, checked as boolean)
+                      }
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{restaurant.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{restaurant.address}</TableCell>
-                  <TableCell className="text-muted-foreground">{restaurant.phone}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <span className="text-yellow-500 mr-1">★</span>
-                      {restaurant.rating}
-                    </div>
+                  <TableCell className="font-medium">{r.name}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {r.address}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {r.phone}
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusBadge(restaurant.status)}>
-                      {restaurant.status.charAt(0).toUpperCase() + restaurant.status.slice(1)}
+                    <Badge
+                      className={getStatusBadge(
+                        r.leadStatus.name.toLowerCase()
+                      )}
+                    >
+                      {r.leadStatus.name}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -160,15 +177,19 @@ export function RestaurantTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewDetail(restaurant)}>
+                        <DropdownMenuItem onClick={() => handleViewDetail(r)}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Detail
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusUpdate(restaurant.id, "contacted")}>
+                        <DropdownMenuItem
+                          onClick={() => handleStatusUpdate(r.id, "contacted")}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Mark as Contacted
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusUpdate(restaurant.id, "closed")}>
+                        <DropdownMenuItem
+                          onClick={() => handleStatusUpdate(r.id, "closed")}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Mark as Closed
                         </DropdownMenuItem>
@@ -180,13 +201,67 @@ export function RestaurantTable() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Pagination */}
+        {metaPagination && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() =>
+                    metaPagination.page > 1 &&
+                    router.push(`/restaurants?page=${metaPagination.page - 1}`)
+                  }
+                  className={
+                    metaPagination.page <= 1
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+
+              {Array.from(
+                { length: metaPagination.lastPage },
+                (_, i) => i + 1
+              ).map((p) => (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    isActive={p === metaPagination.page}
+                    onClick={() => router.push(`/restaurants?page=${p}`)}
+                    className="cursor-pointer"
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() =>
+                    metaPagination.page < metaPagination.lastPage &&
+                    router.push(`/restaurants?page=${metaPagination.page + 1}`)
+                  }
+                  className={
+                    metaPagination.page >= metaPagination.lastPage
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
 
       <RestaurantDetailModal
-        restaurant={selectedRestaurant}
+        initRestaurant={selectedRestaurant}
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
+        onSave={() => {
+          setIsDetailModalOpen(false);
+          window.location.reload();
+        }}
       />
     </>
-  )
+  );
 }

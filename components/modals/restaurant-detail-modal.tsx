@@ -1,11 +1,17 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,124 +19,137 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState } from "react"
-import { Calendar, Phone, Mail, MessageSquare, User, Clock } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import {
+  Calendar,
+  Phone,
+  Mail,
+  MessageSquare,
+  User,
+  Clock,
+} from "lucide-react";
+import { LeadActivity, LeadNote } from "@/types/restaurant.type";
+import { ScrollArea } from "../ui/scroll-area";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 interface RestaurantDetailModalProps {
-  restaurant: any
-  isOpen: boolean
-  onClose: () => void
+  initRestaurant: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: () => void;
 }
 
-export function RestaurantDetailModal({ restaurant, isOpen, onClose }: RestaurantDetailModalProps) {
-  const [notes, setNotes] = useState("")
-  const [newActivity, setNewActivity] = useState("")
-  const [activityType, setActivityType] = useState("contact")
-  const [status, setStatus] = useState(restaurant?.status || "prospect")
-  const [activityLog, setActivityLog] = useState([
-    {
-      id: 1,
-      date: "2025-01-15",
-      time: "10:30 AM",
-      action: "Restaurant added to database",
-      type: "system",
-      user: "System",
-      details: "Automatically scraped from Google Maps",
-    },
-    {
-      id: 2,
-      date: "2025-01-16",
-      time: "2:15 PM",
-      action: "Initial contact attempted via phone",
-      type: "contact",
-      user: "John Doe",
-      details: "No answer, left voicemail",
-    },
-    {
-      id: 3,
-      date: "2025-01-18",
-      time: "9:45 AM",
-      action: "Follow-up email sent",
-      type: "contact",
-      user: "John Doe",
-      details: "Sent introduction email with service details",
-    },
-    {
-      id: 4,
-      date: "2025-01-20",
-      time: "11:20 AM",
-      action: "Status updated to Contacted",
-      type: "status",
-      user: "John Doe",
-      details: "",
-    },
-  ])
+export function RestaurantDetailModal({
+  initRestaurant,
+  isOpen,
+  onClose,
+  onSave,
+}: RestaurantDetailModalProps) {
+  const [notes, setNotes] = useState("");
+  const [newActivity, setNewActivity] = useState("");
+  const [activityType, setActivityType] = useState("contact");
+  const [restaurant, setRestaurant] = useState(initRestaurant);
+  const [status, setStatus] = useState("prospect");
+  const { user } = useAuth();
 
-  if (!restaurant) return null
+  useEffect(() => {
+    setRestaurant(initRestaurant);
+    setStatus(initRestaurant?.leadStatus.name.toLowerCase() || "prospect");
+  }, [initRestaurant]);
+
+  if (!restaurant) return null;
 
   const getStatusBadge = (status: string) => {
     const variants = {
       prospect: "bg-blue-100 text-blue-800 border-blue-200",
       contacted: "bg-yellow-100 text-yellow-800 border-yellow-200",
       closed: "bg-green-100 text-green-800 border-green-200",
-    }
-    return variants[status as keyof typeof variants] || variants.prospect
-  }
+    };
+    return variants[status as keyof typeof variants] || variants.prospect;
+  };
 
-  const handleAddActivity = () => {
-    if (!newActivity.trim()) return
+  const handleAddActivity = async () => {
+    if (!newActivity.trim()) return;
 
-    const activity = {
-      id: activityLog.length + 1,
-      date: new Date().toISOString().split("T")[0],
-      time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      action: newActivity,
-      type: activityType,
-      user: "John Doe", // In real app, get from auth context
-      details: "",
-    }
+    setRestaurant((prev) => ({
+      ...prev,
+      leadActivity: [
+        {
+          activity: newActivity,
+          createdAt: new Date(),
+          description: "",
+          id: `${crypto.randomUUID()}-new-activity`,
+          type: activityType,
+          user: {
+            id: user.id,
+            name: user.name,
+          },
+        },
+        ...prev.leadActivity,
+      ],
+    }));
 
-    setActivityLog([activity, ...activityLog])
-    setNewActivity("")
-  }
-
-  const handleStatusUpdate = () => {
-    // In real app, this would make an API call
-    console.log("Updating status to:", status)
-
-    // Add activity log entry for status change
-    const activity = {
-      id: activityLog.length + 1,
-      date: new Date().toISOString().split("T")[0],
-      time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      action: `Status updated to ${status.charAt(0).toUpperCase() + status.slice(1)}`,
-      type: "status",
-      user: "John Doe",
-      details: "",
-    }
-
-    setActivityLog([activity, ...activityLog])
-  }
+    setNewActivity("");
+  };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "contact":
-        return <Phone className="h-4 w-4 text-blue-500" />
+        return <Phone className="h-4 w-4 text-blue-500" />;
       case "email":
-        return <Mail className="h-4 w-4 text-green-500" />
+        return <Mail className="h-4 w-4 text-green-500" />;
       case "meeting":
-        return <Calendar className="h-4 w-4 text-purple-500" />
+        return <Calendar className="h-4 w-4 text-purple-500" />;
       case "status":
-        return <User className="h-4 w-4 text-orange-500" />
+        return <User className="h-4 w-4 text-orange-500" />;
       case "note":
-        return <MessageSquare className="h-4 w-4 text-gray-500" />
+        return <MessageSquare className="h-4 w-4 text-gray-500" />;
       default:
-        return <Clock className="h-4 w-4 text-gray-400" />
+        return <Clock className="h-4 w-4 text-gray-400" />;
     }
-  }
+  };
+
+  const handleSaveButton = async () => {
+    try {
+      await axios.put(`${process.env.NEXT_PUBLIC_URL}/api/restaurant`, {
+        leadId: restaurant.id,
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+      });
+      restaurant.leadActivity.forEach(async (activity) => {
+        if (activity.id.endsWith("-new-activity")) {
+          await axios.post(
+            `${process.env.NEXT_PUBLIC_URL}/api/restaurant/activity`,
+            {
+              userId: user.id,
+              restaurantId: restaurant.id,
+              activities: activity.activity,
+              type: activity.type,
+              description: activity.description,
+            }
+          );
+        }
+      });
+      if (notes && notes !== "") {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_URL}/api/restaurant/notes`,
+          {
+            userId: user.id,
+            restaurantId: restaurant.id,
+            notes: notes,
+          }
+        );
+      }
+      toast.success("Success to save changes");
+      onSave();
+    } catch (error) {
+      toast.error("Failed while save changes");
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -138,9 +157,13 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             {restaurant.name}
-            <Badge className={getStatusBadge(status)}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+            <Badge className={getStatusBadge(status)}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
           </DialogTitle>
-          <DialogDescription>Manage restaurant details and track all interactions</DialogDescription>
+          <DialogDescription>
+            Manage restaurant details and track all interactions
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
@@ -154,23 +177,33 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
             {/* Restaurant Details */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Address</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Address
+                </Label>
                 <p className="text-sm mt-1">{restaurant.address}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Phone
+                </Label>
                 <p className="text-sm mt-1">{restaurant.phone}</p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Rating</Label>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Rating
+                </Label>
                 <div className="flex items-center mt-1">
                   <span className="text-yellow-500 mr-1">★</span>
                   <span className="text-sm">{restaurant.rating}</span>
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium text-muted-foreground">Website</Label>
-                <p className="text-sm text-primary mt-1">www.example-restaurant.com</p>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  Website
+                </Label>
+                <p className="text-sm text-primary mt-1">
+                  {restaurant.company.website}
+                </p>
               </div>
             </div>
 
@@ -193,9 +226,6 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleStatusUpdate} className="mt-6 bg-primary hover:bg-primary/90">
-                  Update Status
-                </Button>
               </div>
             </div>
           </TabsContent>
@@ -213,7 +243,6 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
                     <SelectItem value="contact">Phone Call</SelectItem>
                     <SelectItem value="email">Email</SelectItem>
                     <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="note">Note</SelectItem>
                   </SelectContent>
                 </Select>
                 <Input
@@ -222,7 +251,10 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
                   onChange={(e) => setNewActivity(e.target.value)}
                   className="flex-1 bg-input"
                 />
-                <Button onClick={handleAddActivity} className="bg-primary hover:bg-primary/90">
+                <Button
+                  onClick={handleAddActivity}
+                  className="bg-primary hover:bg-primary/90"
+                >
                   Add
                 </Button>
               </div>
@@ -231,27 +263,74 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
             {/* Activity Timeline */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Activity Timeline</h3>
-              <div className="space-y-4">
-                {activityLog.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start space-x-3 p-3 bg-card rounded-lg border border-border"
-                  >
-                    <div className="flex-shrink-0 mt-1">{getActivityIcon(activity.type)}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{activity.action}</p>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>{activity.date}</span>
-                          <span>{activity.time}</span>
-                        </div>
+              <ScrollArea className="h-72 w-full">
+                <div className="space-y-4">
+                  {restaurant.leadActivity.map((activity: LeadActivity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start space-x-3 p-3 bg-card rounded-lg border border-border"
+                    >
+                      <div className="flex-shrink-0 mt-1">
+                        {getActivityIcon(activity.type || "email")}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">by {activity.user}</p>
-                      {activity.details && <p className="text-xs text-muted-foreground mt-1">{activity.details}</p>}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">
+                            {activity.activity}
+                          </p>
+                          <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                            <span>
+                              {new Date(activity.createdAt).toLocaleTimeString(
+                                "en-US",
+                                {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </span>
+                            <span>
+                              {new Date(activity.createdAt).toLocaleDateString(
+                                "en-CA"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          by {activity.user.name}
+                        </p>
+
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {activity.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                  {restaurant.leadActivity.length < 1 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-12 w-12 mb-4 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 17v-2h6v2m-7-8h8M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 
+        2 0 01-2-2V9a2 2 0 012-2z"
+                        />
+                      </svg>
+                      <p className="text-lg font-medium">Activity Is Empty</p>
+                      <p className="text-sm text-gray-400">
+                        Your Activity Data Will Display There
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
             </div>
           </TabsContent>
 
@@ -269,18 +348,43 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
               {/* Previous Notes */}
               <div className="space-y-3">
                 <h4 className="font-medium">Previous Notes</h4>
-                <div className="space-y-2">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm">
-                      Owner seems interested in our catering services. Follow up next week with pricing details.
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">Added on 2025-01-18 by John Doe</p>
+                <ScrollArea className="h-72 w-full">
+                  <div className="space-y-2">
+                    {restaurant.leadNotes.map((note: LeadNote) => (
+                      <div key={note.id} className="p-3 bg-muted rounded-lg">
+                        <p className="text-sm">{note.notes}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Added on{" "}
+                          {new Date(note.createdAt).toLocaleDateString("en-CA")}{" "}
+                          by {note.user.name}
+                        </p>
+                      </div>
+                    ))}
+                    {restaurant.leadNotes.length < 1 && (
+                      <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-12 w-12 mb-4 text-gray-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 17v-2h6v2m-7-8h8M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 
+        2 0 01-2-2V9a2 2 0 012-2z"
+                          />
+                        </svg>
+                        <p className="text-lg font-medium">Notes Is Empty</p>
+                        <p className="text-sm text-gray-400">
+                          Your Notes Data Will Display There
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm">Restaurant has good online reviews. Potential for partnership.</p>
-                    <p className="text-xs text-muted-foreground mt-2">Added on 2025-01-15 by John Doe</p>
-                  </div>
-                </div>
+                </ScrollArea>
               </div>
             </div>
           </TabsContent>
@@ -290,9 +394,14 @@ export function RestaurantDetailModal({ restaurant, isOpen, onClose }: Restauran
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Save Changes</Button>
+          <Button
+            onClick={handleSaveButton}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

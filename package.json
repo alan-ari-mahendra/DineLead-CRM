@@ -7,7 +7,9 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "seed:dev": "prisma db push --force-reset && prisma generate && tsx prisma/seed.ts",
+    "worker": "tsx worker/scrapper.worker.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -44,10 +46,12 @@
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "bullmq": "^5.58.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "latest",
+    "dotenv": "^17.2.1",
     "embla-carousel-react": "8.5.1",
     "geist": "latest",
     "input-otp": "1.4.1",
