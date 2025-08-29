@@ -36,6 +36,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { Restaurant } from "@/types/restaurant.type";
 
 interface RestaurantDetailModalProps {
   initRestaurant: any;
@@ -74,25 +75,28 @@ export function RestaurantDetailModal({
   };
 
   const handleAddActivity = async () => {
-    if (!newActivity.trim()) return;
+    if (!newActivity.trim() || !restaurant) return;
 
-    setRestaurant((prev) => ({
-      ...prev,
-      leadActivity: [
-        {
-          activity: newActivity,
-          createdAt: new Date(),
-          description: "",
-          id: `${crypto.randomUUID()}-new-activity`,
-          type: activityType,
-          user: {
-            id: user.id,
-            name: user.name,
+    setRestaurant((prev: Restaurant | null) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        leadActivity: [
+          {
+            activity: newActivity,
+            createdAt: new Date(),
+            description: "",
+            id: `${crypto.randomUUID()}-new-activity`,
+            type: activityType,
+            user: {
+              id: user.id,
+              name: user.name,
+            },
           },
-        },
-        ...prev.leadActivity,
-      ],
-    }));
+          ...prev.leadActivity,
+        ],
+      };
+    });
 
     setNewActivity("");
   };

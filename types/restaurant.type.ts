@@ -20,13 +20,19 @@ export interface Company {
   industry: string[];
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export interface LeadActivity {
   id: string;
   type: string;
   activity: string;
   description: string;
   createdAt: Date;
-  user: LeadStatus;
+  user: User;
 }
 
 export interface LeadStatus {
@@ -38,5 +44,5 @@ export interface LeadNote {
   id: string;
   notes: string;
   createdAt: Date;
-  user: LeadStatus;
+  user: User;
 }

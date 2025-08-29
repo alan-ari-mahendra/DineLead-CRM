@@ -1,118 +1,165 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ScrapingData } from "@/lib/generated/prisma";
+import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request, res: Response) {
-  const session = await getServerSession(authOptions);
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
 
-  if (!session) {
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "15");
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "all";
+    const rating = searchParams.get("rating") || "all";
+    const industry = searchParams.get("industry") || "all";
+
+    // Build where clause for filtering
+    const where: any = {
+      userId: session.user.id,
+    };
+
+    // Search filter
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+        { address: { contains: search, mode: "insensitive" } },
+        { company: { name: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    // Status filter
+    if (status !== "all") {
+      where.leadStatus = {
+        name: status.charAt(0).toUpperCase() + status.slice(1),
+      };
+    }
+
+    // Rating filter
+    if (rating !== "all") {
+      const ratingValue = parseInt(rating);
+      where.rating = {
+        gte: ratingValue,
+      };
+    }
+
+    // Industry filter
+    if (industry !== "all") {
+      where.company = {
+        industry: {
+          has: industry,
+        },
+      };
+    }
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await prisma.lead.count({ where });
+
+    // Fetch restaurants with filters and pagination
+    const restaurants = await prisma.lead.findMany({
+      where,
+      include: {
+        leadStatus: true,
+        company: true,
+        leadNotes: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        leadActivity: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { id: "desc" },
+      skip,
+      take: limit,
+    });
+
+    // Format data for frontend
+    const formattedRestaurants = restaurants.map((restaurant) => ({
+      id: restaurant.id,
+      name: restaurant.name,
+      email: restaurant.email,
+      phone: restaurant.phone,
+      address: restaurant.address,
+      source: restaurant.source,
+      rating: restaurant.rating,
+      reviewCount: restaurant.reviewCount,
+      leadStatus: restaurant.leadStatus,
+      company: restaurant.company,
+      leadNotes: restaurant.leadNotes,
+      leadActivity: restaurant.leadActivity,
+    }));
+
+    // Get available industries for filter options
+    const industries = await prisma.company.findMany({
+      where: { userId: session.user.id },
+      select: { industry: true },
+    });
+
+    const allIndustries = industries
+      .flatMap((company) => company.industry)
+      .filter((industry, index, arr) => arr.indexOf(industry) === index)
+      .sort();
+
+    // Get available statuses for filter options
+    const statuses = await prisma.leadStatus.findMany({
+      select: { name: true },
+    });
+
+    const availableStatuses = statuses.map((status) => status.name);
+
+    return NextResponse.json({
+      data: formattedRestaurants,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPrevPage: page > 1,
+      },
+      filters: {
+        availableStatuses,
+        availableIndustries: allIndustries,
+        availableRatings: [2, 3, 4, 5],
+      },
+    });
+  } catch (error) {
+    console.error("Restaurant fetch error:", error);
     return NextResponse.json(
-      { code: 401, message: "Unauthorized" },
-      { status: 401 }
+      { error: "Failed to fetch restaurants" },
+      { status: 500 }
     );
   }
-
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
-  const skip = (page - 1) * limit;
-
-  const keyword = searchParams.get("keyword") || "";
-  const rating = searchParams.get("rating");
-  const filters: any = {};
-
-  if (keyword) {
-    filters.OR = [{ name: { contains: keyword, mode: "insensitive" } }];
-  }
-
-  if (rating && rating !== "all") {
-    filters.rating = {
-      gte: Number(rating),
-    };
-  }
-
-  const total = await prisma.lead.count({
-    where: filters,
-  });
-
-  const leadData = await prisma.lead.findMany({
-    where: filters,
-    skip,
-    take: limit,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      address: true,
-      source: true,
-      rating: true,
-      reviewCount: true,
-      leadActivity: {
-        take: 5,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          type: true,
-          activity: true,
-          description: true,
-          createdAt: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      leadNotes: {
-        take: 5,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          notes: true,
-          createdAt: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      },
-      leadStatus: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      company: {
-        select: {
-          id: true,
-          name: true,
-          website: true,
-          industry: true,
-        },
-      },
-    },
-  });
-
-  return NextResponse.json({
-    code: 200,
-    message: "Lead data fetched successfully",
-    data: leadData,
-    meta: {
-      total,
-      page,
-      lastPage: Math.ceil(total / limit),
-    },
-  });
 }
 
 export async function POST(req: NextRequest) {
@@ -135,7 +182,7 @@ export async function POST(req: NextRequest) {
   }
 
   await Promise.all(
-    restaurants.map(async (restaurant: ScrapingData) => {
+    restaurants.map(async (restaurant: any) => {
       const check = await prisma.scrapingData.findUnique({
         where: { id: restaurant.id },
         select: { hasBeenAdded: true },
