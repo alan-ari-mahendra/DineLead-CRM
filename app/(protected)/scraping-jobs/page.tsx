@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,7 +50,7 @@ interface PaginationMeta {
   lastPage: number;
 }
 
-export default function ScrapingJobsPage() {
+function ScrapingJobsContent() {
   const [jobs, setJobs] = useState<ScrapingJob[]>([]);
   const [meta, setMeta] = useState<PaginationMeta>({
     page: 1,
@@ -368,5 +369,37 @@ export default function ScrapingJobsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function ScrapingJobsLoading() {
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Scraping Jobs
+          </h1>
+          <p className="text-gray-600">
+            Monitor and manage your data scraping operations.
+          </p>
+        </div>
+        <OpenScrapingModalButton />
+      </div>
+
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function ScrapingJobsPage() {
+  return (
+    <Suspense fallback={<ScrapingJobsLoading />}>
+      <ScrapingJobsContent />
+    </Suspense>
   );
 }
