@@ -9,7 +9,8 @@
     "start": "next start",
     "seed": "tsx prisma/seed.ts",
     "seed:dev": "prisma db push --force-reset && prisma generate && tsx prisma/seed.ts",
-    "worker": "tsx worker/scrapper.worker.ts"
+    "worker": "tsx worker/scrapper.worker.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
