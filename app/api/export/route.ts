@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Build Prisma query with filters
-    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
+    const where: NonNullable<Parameters<typeof prisma.lead.findMany>[0]>["where"] = {
       userId: session.user.id,
     };
 
@@ -118,7 +118,7 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    return new NextResponse(fileBytes, {
+    return new NextResponse(new Uint8Array(fileBytes), {
       status: 200,
       headers: {
         "Content-Type": getContentType(format),
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     // Build Prisma query with filters
-    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
+    const where: NonNullable<Parameters<typeof prisma.lead.findMany>[0]>["where"] = {
       userId: session.user.id,
     };
 

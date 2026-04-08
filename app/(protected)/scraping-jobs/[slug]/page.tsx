@@ -15,6 +15,7 @@ const getScrapingJobData = async (scrapingJobId: string) => {
   if (!scrapingJob || scrapingJob.userId !== session.user.id) notFound();
 
   const limit = 15;
+  const page = 1;
   const [data, total] = await Promise.all([
     prisma.scrapingData.findMany({
       where: { scrapingJobId },
@@ -23,12 +24,17 @@ const getScrapingJobData = async (scrapingJobId: string) => {
     prisma.scrapingData.count({ where: { scrapingJobId } }),
   ]);
 
+  const totalPages = Math.ceil(total / limit);
+
   return {
     data,
     meta: {
       total,
-      page: 1,
-      lastPage: Math.ceil(total / limit),
+      page,
+      limit,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
     },
     isOnProgress: scrapingJob.status,
   };

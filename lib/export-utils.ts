@@ -201,7 +201,7 @@ export function formatDataForExport(
           break;
         }
         default:
-          formatted[field] = (lead as Record<string, unknown>)[field] as string || "";
+          formatted[field] = (lead as unknown as Record<string, unknown>)[field] as string || "";
       }
     });
 

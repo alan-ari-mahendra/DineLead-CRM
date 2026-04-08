@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const industry = searchParams.get("industry") || "all";
 
     // Build where clause for filtering
-    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
+    const where: NonNullable<Parameters<typeof prisma.lead.findMany>[0]>["where"] = {
       userId: session.user.id,
     };
 

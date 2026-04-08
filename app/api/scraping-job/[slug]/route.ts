@@ -28,7 +28,7 @@ export async function GET(req: Request, { params }: Params) {
 
   const keyword = searchParams.get("keyword") || "";
   const rating = searchParams.get("rating");
-  const filters: Parameters<typeof prisma.scrapingData.findMany>[0]["where"] = {
+  const filters: NonNullable<Parameters<typeof prisma.scrapingData.findMany>[0]>["where"] = {
     scrapingJobId: slug,
   };
 

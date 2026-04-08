@@ -336,7 +336,7 @@ export default function ScrapeDataTableComponent({
               </PaginationItem>
 
               {Array.from(
-                { length: metaPagination.lastPage },
+                { length: metaPagination.totalPages },
                 (_, i) => i + 1
               ).map((p) => (
                 <PaginationItem key={p}>
@@ -353,10 +353,10 @@ export default function ScrapeDataTableComponent({
               <PaginationItem>
                 <PaginationNext
                   onClick={() =>
-                    page < metaPagination.lastPage && setPage(page + 1)
+                    page < metaPagination.totalPages && setPage(page + 1)
                   }
                   className={
-                    page >= metaPagination.lastPage
+                    page >= metaPagination.totalPages
                       ? "pointer-events-none opacity-50"
                       : ""
                   }
