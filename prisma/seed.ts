@@ -37,7 +37,7 @@ async function main() {
       name: "Closed",
     },
   });
-  console.log({ user });
+  console.log("Seeded user:", user.email);
 }
 main()
   .then(() => prisma.$disconnect())
@@ -45,4 +45,5 @@ main()
     console.error(e);
     await prisma.$disconnect();
     process.exit(1);
-  });
+  })
+  .finally(() => prisma.$disconnect());

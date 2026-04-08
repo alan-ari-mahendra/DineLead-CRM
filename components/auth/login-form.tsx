@@ -16,9 +16,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
+const DEMO_EMAIL = "admin@admin.com";
+const DEMO_PASSWORD = "password";
+
 export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(DEMO_EMAIL);
+  const [password, setPassword] = useState(DEMO_PASSWORD);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 

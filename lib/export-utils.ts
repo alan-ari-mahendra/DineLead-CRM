@@ -3,7 +3,7 @@ import * as ExcelJS from "exceljs";
 import { format as formatDate } from "date-fns";
 
 // Field mapping for better column headers - ONLY fields that exist in database
-export const FIELD_LABELS: { [key: string]: string } = {
+export const FIELD_LABELS: Record<string, string> = {
   name: "Restaurant Name",
   address: "Address",
   phone: "Phone",
@@ -23,8 +23,10 @@ export const FIELD_LABELS: { [key: string]: string } = {
   latestActivityDescription: "Activity Description",
 };
 
+type ExportRow = Record<string, string | number | string[]>;
+
 // Convert data to CSV format
-export function convertToCSV(data: any[], fields: string[]): string {
+export function convertToCSV(data: ExportRow[], fields: string[]): string {
   const parser = new Parser({
     fields: fields.map((field) => ({
       label: FIELD_LABELS[field] || field,
@@ -34,11 +36,11 @@ export function convertToCSV(data: any[], fields: string[]): string {
   return parser.parse(data);
 }
 
-// Convert data to Excel format - FIXED VERSION
+// Convert data to Excel format
 export async function convertToExcel(
-  data: any[],
+  data: ExportRow[],
   fields: string[]
-): Promise<Buffer> {
+): Promise<Uint8Array> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Restaurant Leads");
 
@@ -80,14 +82,14 @@ export async function convertToExcel(
   worksheet.columns.forEach((column) => {
     if (column.values) {
       const maxLength = Math.max(
-        ...column.values.map((cell: any) => (cell ? cell.toString().length : 0))
+        ...column.values.map((cell) => (cell ? cell.toString().length : 0))
       );
       column.width = Math.min(maxLength + 2, 50);
     }
   });
 
   // Add borders
-  worksheet.eachRow((row, rowNumber) => {
+  worksheet.eachRow((row) => {
     row.eachCell((cell) => {
       cell.border = {
         top: { style: "thin" },
@@ -99,18 +101,19 @@ export async function convertToExcel(
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(buffer);
+  return new Uint8Array(buffer as ArrayBuffer);
 }
 
 // Convert data to JSON format
-export function convertToJSON(data: any[], fields: string[]): string {
+export function convertToJSON(data: ExportRow[], fields: string[]): string {
   const formattedData = data.map((row) => {
-    const formatted: any = {};
+    const formatted: Record<string, string | number | string[]> = {};
     fields.forEach((field) => {
-      if (field === "companyIndustry" && Array.isArray(row[field])) {
-        formatted[FIELD_LABELS[field] || field] = row[field].join(", ");
+      const value = row[field];
+      if (field === "companyIndustry" && Array.isArray(value)) {
+        formatted[FIELD_LABELS[field] || field] = value.join(", ");
       } else {
-        formatted[FIELD_LABELS[field] || field] = row[field] || "";
+        formatted[FIELD_LABELS[field] || field] = value || "";
       }
     });
     return formatted;
@@ -119,10 +122,28 @@ export function convertToJSON(data: any[], fields: string[]): string {
   return JSON.stringify(formattedData, null, 2);
 }
 
+interface LeadForExport {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  rating: number;
+  reviewCount: number;
+  source: string;
+  createdAt: Date;
+  leadStatus?: { name: string } | null;
+  company?: { name: string; website: string; industry: string[] } | null;
+  leadNotes?: { notes: string }[];
+  leadActivity?: { activity: string; type: string; description: string }[];
+}
+
 // Format data for export (common function) - ONLY use existing fields
-export function formatDataForExport(leads: any[], fields: string[]) {
+export function formatDataForExport(
+  leads: LeadForExport[],
+  fields: string[]
+): ExportRow[] {
   return leads.map((lead) => {
-    const formatted: any = {};
+    const formatted: ExportRow = {};
 
     fields.forEach((field) => {
       switch (field) {
@@ -159,26 +180,28 @@ export function formatDataForExport(leads: any[], fields: string[]) {
         case "companyIndustry":
           formatted[field] = lead.company?.industry || [];
           break;
-        case "latestNote":
-          // Get the latest note
+        case "latestNote": {
           const latestNote = lead.leadNotes?.[0];
           formatted[field] = latestNote?.notes || "-";
           break;
-        case "latestActivity":
-          // Get the latest activity
+        }
+        case "latestActivity": {
           const latestActivity = lead.leadActivity?.[0];
           formatted[field] = latestActivity?.activity || "-";
           break;
-        case "latestActivityType":
+        }
+        case "latestActivityType": {
           const latestActivityType = lead.leadActivity?.[0];
           formatted[field] = latestActivityType?.type || "-";
           break;
-        case "latestActivityDescription":
+        }
+        case "latestActivityDescription": {
           const latestActivityDesc = lead.leadActivity?.[0];
           formatted[field] = latestActivityDesc?.description || "-";
           break;
+        }
         default:
-          formatted[field] = lead[field] || "";
+          formatted[field] = (lead as Record<string, unknown>)[field] as string || "";
       }
     });
 

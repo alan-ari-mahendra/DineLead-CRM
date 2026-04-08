@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     const industry = searchParams.get("industry") || "all";
 
     // Build where clause for filtering
-    const where: any = {
+    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
       userId: session.user.id,
     };
 
@@ -154,7 +154,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Restaurant fetch error:", error);
     return NextResponse.json(
       { error: "Failed to fetch restaurants" },
       { status: 500 }
@@ -162,93 +161,166 @@ export async function GET(req: NextRequest) {
   }
 }
 
+interface ProspectInput {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  website?: string;
+  source?: string;
+  industry?: string[];
+  rating?: number;
+  reviewCount?: number;
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json(
       { code: 401, message: "Unauthorized" },
       { status: 401 }
     );
   }
-  const { userId, restaurants } = await req.json();
+  const userId = session.user.id;
+  const { restaurants } = (await req.json()) as { restaurants: ProspectInput[] };
+
+  if (!Array.isArray(restaurants) || restaurants.length === 0) {
+    return NextResponse.json(
+      { code: 400, message: "restaurants is required" },
+      { status: 400 }
+    );
+  }
 
   const leadStatus = await prisma.leadStatus.findUnique({
     where: { name: "Prospect" },
   });
 
   if (!leadStatus) {
-    throw new Error("LeadStatus 'Prospect' tidak ditemukan");
+    return NextResponse.json(
+      {
+        code: 500,
+        message:
+          "LeadStatus 'Prospect' not found. Run `pnpm seed` to seed lead statuses.",
+      },
+      { status: 500 }
+    );
   }
 
-  await Promise.all(
-    restaurants.map(async (restaurant: any) => {
+  let successCount = 0;
+  const errors: Array<{ id: string; name: string; error: string }> = [];
+
+  for (const restaurant of restaurants) {
+    try {
+      // Verify the scraping data exists
       const check = await prisma.scrapingData.findUnique({
         where: { id: restaurant.id },
         select: { hasBeenAdded: true },
       });
 
-      if (!check || check.hasBeenAdded) return;
+      if (!check) {
+        errors.push({
+          id: restaurant.id,
+          name: restaurant.name,
+          error: "ScrapingData not found",
+        });
+        continue;
+      }
+
+      if (check.hasBeenAdded) {
+        // Already promoted — skip silently (still counts as "success" for UX)
+        successCount++;
+        continue;
+      }
 
       await prisma.$transaction(async (tx) => {
-        const company = await tx.company.upsert({
+        // Company.name is globally unique → look up first.
+        // If it exists for ANOTHER user, we suffix the name to avoid hijacking.
+        const existingCompany = await tx.company.findUnique({
           where: { name: restaurant.name },
-          create: {
-            name: restaurant.name,
-            website: restaurant.website,
-            industry: restaurant.industry,
-            userId,
-            scrapingDataId: restaurant.id,
-          },
-          update: {
-            website: restaurant.website,
-            industry: restaurant.industry,
-            userId,
-            scrapingDataId: restaurant.id,
-          },
         });
 
-        const lead = await tx.lead.upsert({
+        let company;
+        if (existingCompany) {
+          if (existingCompany.userId === userId) {
+            // Same user — just reuse, do not change ownership / scrapingDataId
+            company = existingCompany;
+          } else {
+            // Different user — create with a unique suffix to avoid global-unique conflict
+            company = await tx.company.create({
+              data: {
+                name: `${restaurant.name} (${userId.slice(0, 6)})`,
+                website: restaurant.website || "-",
+                industry: restaurant.industry ?? [],
+                userId,
+                scrapingDataId: restaurant.id,
+              },
+            });
+          }
+        } else {
+          company = await tx.company.create({
+            data: {
+              name: restaurant.name,
+              website: restaurant.website || "-",
+              industry: restaurant.industry ?? [],
+              userId,
+              scrapingDataId: restaurant.id,
+            },
+          });
+        }
+
+        // Find existing lead by (companyId, name) — manual upsert pattern
+        // (avoids requiring composite-key support in the generated Prisma client)
+        const existingLead = await tx.lead.findFirst({
           where: { companyId: company.id, name: restaurant.name },
-          create: {
-            name: restaurant.name,
-            companyId: company.id,
-            userId,
-            phone: restaurant.phone,
-            email: restaurant.email,
-            address: restaurant.address,
-            source: restaurant.source,
-            leadStatusId: leadStatus.id,
-            scrapingDataId: restaurant.id,
-            rating: restaurant.rating,
-            reviewCount: restaurant.reviewCount,
-          },
-          update: {
-            phone: restaurant.phone,
-            email: restaurant.email,
-            address: restaurant.address,
-            source: restaurant.source,
-            leadStatusId: leadStatus.id,
-            scrapingDataId: restaurant.id,
-            rating: restaurant.rating,
-            reviewCount: restaurant.reviewCount,
-          },
         });
+
+        const lead = existingLead
+          ? await tx.lead.update({
+              where: { id: existingLead.id },
+              data: {
+                // Do NOT reset leadStatusId — preserves existing status
+                phone: restaurant.phone || "-",
+                email: restaurant.email || "-",
+                address: restaurant.address || "-",
+                source: restaurant.source || "-",
+                scrapingDataId: restaurant.id,
+                rating: restaurant.rating ?? 0,
+                reviewCount: restaurant.reviewCount ?? 0,
+              },
+            })
+          : await tx.lead.create({
+              data: {
+                name: restaurant.name,
+                companyId: company.id,
+                userId,
+                phone: restaurant.phone || "-",
+                email: restaurant.email || "-",
+                address: restaurant.address || "-",
+                source: restaurant.source || "-",
+                leadStatusId: leadStatus.id,
+                scrapingDataId: restaurant.id,
+                rating: restaurant.rating ?? 0,
+                reviewCount: restaurant.reviewCount ?? 0,
+              },
+            });
 
         await tx.leadActivity.create({
           data: {
             leadId: lead.id,
             type: "User",
             activity: "Restaurant added to database",
-            description: "Automatically scraped from Google Maps",
-            userId: userId,
+            description: "Promoted from scraping result",
+            userId,
           },
         });
+
         await tx.leadNotes.create({
           data: {
             leadId: lead.id,
             notes: "Restaurant added to database",
-            userId: userId,
+            userId,
           },
         });
 
@@ -257,13 +329,29 @@ export async function POST(req: NextRequest) {
           data: { hasBeenAdded: true },
         });
       });
-    })
-  );
+
+      successCount++;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(
+        `[Prospect] Failed for "${restaurant.name}" (${restaurant.id}):`,
+        message
+      );
+      errors.push({
+        id: restaurant.id,
+        name: restaurant.name,
+        error: message,
+      });
+    }
+  }
 
   return NextResponse.json({
-    code: 200,
-    message: "Success to make it Prospect",
-    data: null,
+    code: errors.length > 0 && successCount === 0 ? 500 : 200,
+    message:
+      errors.length === 0
+        ? `Successfully prospected ${successCount} restaurant(s)`
+        : `Prospected ${successCount}/${restaurants.length}, ${errors.length} error(s)`,
+    data: { successCount, errors },
   });
 }
 
@@ -331,7 +419,6 @@ export async function PUT(req: NextRequest) {
       data: lead,
     });
   } catch (err) {
-    console.error("Error updating lead status:", err);
     return NextResponse.json(
       { code: 500, message: "Internal Server Error" },
       { status: 500 }

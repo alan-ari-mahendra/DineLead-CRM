@@ -12,11 +12,16 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
-  const { userId, restaurantId, notes } = await req.json();
+  const { restaurantId, notes } = await req.json();
+
+  const lead = await prisma.lead.findUnique({ where: { id: restaurantId } });
+  if (!lead || lead.userId !== session.user.id) {
+    return NextResponse.json({ code: 403, message: "Forbidden" }, { status: 403 });
+  }
 
   const note = await prisma.leadNotes.create({
     data: {
-      userId: userId,
+      userId: session.user.id,
       leadId: restaurantId,
       notes: notes,
     },

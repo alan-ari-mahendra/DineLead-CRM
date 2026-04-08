@@ -31,6 +31,7 @@ export function RestaurantFilters({
   const [availableStatuses, setAvailableStatuses] = useState<string[]>([]);
   const [availableIndustries, setAvailableIndustries] = useState<string[]>([]);
   const [availableRatings] = useState([2, 3, 4, 5]);
+  const [filterLoadError, setFilterLoadError] = useState(false);
   const [searchInput, setSearchInput] = useState(filters.search);
 
   // Fetch available filter options
@@ -43,8 +44,8 @@ export function RestaurantFilters({
           setAvailableStatuses(data.filters?.availableStatuses || []);
           setAvailableIndustries(data.filters?.availableIndustries || []);
         }
-      } catch (error) {
-        console.error("Failed to fetch filter options:", error);
+      } catch {
+        setFilterLoadError(true);
       }
     };
 
@@ -95,6 +96,9 @@ export function RestaurantFilters({
 
   return (
     <div className="bg-card p-4 rounded-lg border border-border space-y-4">
+      {filterLoadError && (
+        <p className="text-sm text-destructive">Failed to load filter options. Refresh to retry.</p>
+      )}
       {/* Search Bar */}
       <div className="flex-1">
         <form onSubmit={handleSearchSubmit} className="relative">

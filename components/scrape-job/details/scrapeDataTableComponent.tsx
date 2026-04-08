@@ -53,14 +53,21 @@ export default function ScrapeDataTableComponent({
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("all");
   const [page, setPage] = useState(initialMeta.page);
+  const [isProspecting, setIsProspecting] = useState(false);
   const { user } = useAuth();
 
   const [selectedRestaurants, setSelectedRestaurants] = useState<
     ScrapingData[]
   >([]);
 
+  // Selectable rows = rows that haven't been promoted yet
+  const selectableRows = scrapingData.filter((r) => !r.hasBeenAdded);
+  const allSelectableSelected =
+    selectableRows.length > 0 &&
+    selectedRestaurants.length === selectableRows.length;
+
   const fetchData = async () => {
-    const params: any = { page, limit: 15 };
+    const params: Record<string, string | number> = { page, limit: 15 };
 
     if (searchTerm) params.keyword = searchTerm;
     if (ratingFilter !== "all") params.rating = ratingFilter;
@@ -68,11 +75,11 @@ export default function ScrapeDataTableComponent({
     const res = await axios.get(`/api/scraping-job/${jobId}`, { params });
     setScrapingData(res.data.data);
     setMetaPagination(res.data.meta);
+    setSelectedRestaurants([]);
   };
 
   useEffect(() => {
     fetchData();
-    setSelectedRestaurants([]);
   }, [page, ratingFilter]);
 
   const handleSearch = () => {
@@ -138,14 +145,37 @@ export default function ScrapeDataTableComponent({
   };
 
   const handleMakeProspected = async () => {
-    const res = await axios.post(`/api/restaurant`, {
-      userId: user.id,
-      restaurants: selectedRestaurants,
-    });
+    if (!user?.id) {
+      toast.error("Session not ready, please try again");
+      return;
+    }
+    if (selectedRestaurants.length === 0) {
+      toast.warning("No restaurants selected");
+      return;
+    }
 
-    if (res.data.code === 200) {
-      toast.success("Success to make to prospect");
-      window.location.reload();
+    setIsProspecting(true);
+    try {
+      const res = await axios.post(`/api/restaurant`, {
+        restaurants: selectedRestaurants,
+      });
+
+      if (res.data.code === 200) {
+        toast.success(res.data.message || "Successfully prospected");
+        await fetchData();
+      } else {
+        toast.error(res.data.message || "Failed to prospect");
+        if (res.data?.data?.errors?.length) {
+          console.error("Prospect errors:", res.data.data.errors);
+        }
+      }
+    } catch (err) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message || "Failed to prospect restaurants";
+      toast.error(message);
+    } finally {
+      setIsProspecting(false);
     }
   };
 
@@ -205,9 +235,10 @@ export default function ScrapeDataTableComponent({
                 onClick={handleMakeProspected}
                 size="sm"
                 variant="outline"
+                disabled={isProspecting}
               >
                 <Zap className="h-4 w-4 mr-2" />
-                Make Prospected
+                {isProspecting ? "Processing..." : "Make Prospected"}
               </Button>
             </div>
           </div>
@@ -219,8 +250,9 @@ export default function ScrapeDataTableComponent({
               <TableRow>
                 <TableHead className="w-12">
                   <Checkbox
-                    checked={selectedRestaurants.length === scrapingData.length}
+                    checked={allSelectableSelected}
                     onCheckedChange={handleSelectAll}
+                    disabled={selectableRows.length === 0}
                   />
                 </TableHead>
                 <TableHead>Restaurant Name</TableHead>

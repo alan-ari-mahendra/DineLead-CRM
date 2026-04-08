@@ -39,7 +39,7 @@ import { toast } from "react-toastify";
 import { Restaurant } from "@/types/restaurant.type";
 
 interface RestaurantDetailModalProps {
-  initRestaurant: any;
+  initRestaurant: Restaurant | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
@@ -82,6 +82,10 @@ export function RestaurantDetailModal({
 
   const handleAddActivity = async () => {
     if (!newActivity.trim() || !restaurant) return;
+    if (!user?.id) {
+      toast.error("Session not ready");
+      return;
+    }
 
     setRestaurant((prev: Restaurant | null) => {
       if (!prev) return null;
@@ -95,8 +99,9 @@ export function RestaurantDetailModal({
             id: `${generateRandomString()}-new-activity`,
             type: activityType,
             user: {
-              id: user.id,
-              name: user.name,
+              id: user.id ?? "",
+              name: user.name ?? "",
+              email: user.email ?? "",
             },
           },
           ...prev.leadActivity,
@@ -125,38 +130,38 @@ export function RestaurantDetailModal({
   };
 
   const handleSaveButton = async () => {
+    if (!user?.id) {
+      toast.error("Session not ready");
+      return;
+    }
     try {
-      await axios.put(`${process.env.NEXT_PUBLIC_URL}/api/restaurant`, {
+      await axios.put(`/api/restaurant`, {
         leadId: restaurant.id,
         status: status.charAt(0).toUpperCase() + status.slice(1),
       });
-      restaurant.leadActivity.forEach(async (activity) => {
-        if (activity.id.endsWith("-new-activity")) {
-          await axios.post(
-            `${process.env.NEXT_PUBLIC_URL}/api/restaurant/activity`,
-            {
-              userId: user.id,
-              restaurantId: restaurant.id,
-              activities: activity.activity,
-              type: activity.type,
-              description: activity.description,
-            }
-          );
-        }
-      });
+
+      // Sequential to surface errors clearly
+      const newActivities = restaurant.leadActivity.filter((a) =>
+        a.id.endsWith("-new-activity")
+      );
+      for (const activity of newActivities) {
+        await axios.post(`/api/restaurant/activity`, {
+          restaurantId: restaurant.id,
+          activities: activity.activity,
+          type: activity.type,
+          description: activity.description,
+        });
+      }
+
       if (notes && notes !== "") {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_URL}/api/restaurant/notes`,
-          {
-            userId: user.id,
-            restaurantId: restaurant.id,
-            notes: notes,
-          }
-        );
+        await axios.post(`/api/restaurant/notes`, {
+          restaurantId: restaurant.id,
+          notes: notes,
+        });
       }
       toast.success("Success to save changes");
       onSave();
-    } catch (error) {
+    } catch {
       toast.error("Failed while save changes");
     }
   };
@@ -212,7 +217,9 @@ export function RestaurantDetailModal({
                   Website
                 </Label>
                 <p className="text-sm text-primary mt-1">
-                  {restaurant.company.website}
+                  {restaurant.company?.website && restaurant.company.website !== "-"
+                    ? restaurant.company.website
+                    : "-"}
                 </p>
               </div>
             </div>

@@ -48,7 +48,7 @@ export function RestaurantTable({
   isLoading,
 }: Props) {
   const [selectedRestaurants, setSelectedRestaurants] = useState<string[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const router = useRouter();
 
@@ -68,7 +68,7 @@ export function RestaurantTable({
     }
   };
 
-  const handleViewDetail = (restaurant: any) => {
+  const handleViewDetail = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant);
     setIsDetailModalOpen(true);
   };
@@ -117,14 +117,13 @@ export function RestaurantTable({
     newStatus: string
   ) => {
     try {
-      await axios.put(`${process.env.NEXT_PUBLIC_URL}/api/restaurant`, {
+      await axios.put(`/api/restaurant`, {
         leadId: restaurantId,
         status: newStatus.charAt(0).toUpperCase() + newStatus.slice(1),
       });
       toast.success("Status updated successfully");
-      // Refresh the current page data
       onPageChange(metaPagination.page);
-    } catch (error) {
+    } catch {
       toast.error("Failed to update status");
     }
   };

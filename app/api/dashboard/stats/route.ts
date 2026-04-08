@@ -199,7 +199,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error("Dashboard stats error:", error);
     return NextResponse.json(
       { error: "Failed to fetch dashboard statistics" },
       { status: 500 }

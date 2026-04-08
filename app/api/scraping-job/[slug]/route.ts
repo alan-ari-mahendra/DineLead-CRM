@@ -4,9 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 interface Params {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export async function GET(req: Request, { params }: Params) {
@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: Params) {
     );
   }
 
-  const { slug } = params;
+  const { slug } = await params;
 
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
@@ -28,7 +28,7 @@ export async function GET(req: Request, { params }: Params) {
 
   const keyword = searchParams.get("keyword") || "";
   const rating = searchParams.get("rating");
-  const filters: any = {
+  const filters: Parameters<typeof prisma.scrapingData.findMany>[0]["where"] = {
     scrapingJobId: slug,
   };
 
@@ -53,10 +53,12 @@ export async function GET(req: Request, { params }: Params) {
   });
 
   const scrapingJob = await prisma.scrapingJob.findUnique({
-    where: {
-      id: slug,
-    },
+    where: { id: slug },
   });
+
+  if (!scrapingJob || scrapingJob.userId !== session.user.id) {
+    return NextResponse.json({ code: 403, message: "Forbidden" }, { status: 403 });
+  }
 
   return NextResponse.json({
     code: 200,

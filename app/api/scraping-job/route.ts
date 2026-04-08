@@ -20,11 +20,12 @@ export async function GET(req: Request) {
 
   const [jobs, total] = await Promise.all([
     prisma.scrapingJob.findMany({
+      where: { userId: session.user.id },
       skip: offset,
       take: limit,
       orderBy: { createdAt: "desc" },
     }),
-    prisma.scrapingJob.count(),
+    prisma.scrapingJob.count({ where: { userId: session.user.id } }),
   ]);
 
   const lastPage = Math.ceil(total / limit);

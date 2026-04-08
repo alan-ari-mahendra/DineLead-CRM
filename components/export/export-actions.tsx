@@ -37,10 +37,8 @@ export function ExportActions({ filters, totalRecords }: ExportActionsProps) {
         fields: filters.selectedFields.join(","),
         status: filters.status,
         rating: filters.rating,
-        location: filters.location,
       });
 
-      // Add date range if available
       if (filters.dateRange?.from) {
         params.append("dateFrom", filters.dateRange.from.toISOString());
       }
@@ -48,21 +46,33 @@ export function ExportActions({ filters, totalRecords }: ExportActionsProps) {
         params.append("dateTo", filters.dateRange.to.toISOString());
       }
 
-      const downloadUrl = `/api/export?${params.toString()}`;
+      // Use fetch so we can detect server errors before triggering a download
+      const response = await fetch(`/api/export?${params.toString()}`);
 
-      // Create temporary link and trigger download
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => null);
+        toast.error(
+          errJson?.error || `Failed to export data (HTTP ${response.status})`
+        );
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
       const link = document.createElement("a");
-      link.href = downloadUrl;
+      link.href = url;
       link.download = `restaurant-leads-${
         new Date().toISOString().split("T")[0]
       }.${format === "excel" ? "xlsx" : format}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast.success(`Data exported successfully as ${format.toUpperCase()}`);
-    } catch (error) {
-      console.error("Export failed:", error);
+    } catch (err) {
+      console.error("[Export] Failed:", err);
       toast.error("Failed to export data. Please try again.");
     } finally {
       setIsExporting(false);

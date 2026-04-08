@@ -56,8 +56,8 @@ export default function ExportPage() {
         const data = await response.json();
         setTotalRecords(data.meta.total);
       }
-    } catch (error) {
-      console.error("Failed to fetch total count:", error);
+    } catch {
+      // silently fail; total count display is non-critical
     } finally {
       setIsLoadingTotal(false);
     }

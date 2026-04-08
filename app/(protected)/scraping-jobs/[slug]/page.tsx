@@ -1,33 +1,46 @@
-import { getCookies } from "@/app/action";
 import ScrapeDataTableComponent from "@/components/scrape-job/details/scrapeDataTableComponent";
-import axios from "axios";
+import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { notFound } from "next/navigation";
 
-const getScrapingJobs = async (scrapingJobId: String) => {
-  try {
-    const cookieString = await getCookies();
-    const response = await axios.get(
-      `${process.env.NEXTAUTH_URL}/api/scraping-job/${scrapingJobId}?limit=15`,
-      {
-        headers: {
-          Cookie: cookieString,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Failed to fetch scraping jobs:", error);
-    notFound();
-  }
+const getScrapingJobData = async (scrapingJobId: string) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) notFound();
+
+  const scrapingJob = await prisma.scrapingJob.findUnique({
+    where: { id: scrapingJobId },
+  });
+
+  if (!scrapingJob || scrapingJob.userId !== session.user.id) notFound();
+
+  const limit = 15;
+  const [data, total] = await Promise.all([
+    prisma.scrapingData.findMany({
+      where: { scrapingJobId },
+      take: limit,
+    }),
+    prisma.scrapingData.count({ where: { scrapingJobId } }),
+  ]);
+
+  return {
+    data,
+    meta: {
+      total,
+      page: 1,
+      lastPage: Math.ceil(total / limit),
+    },
+    isOnProgress: scrapingJob.status,
+  };
 };
 
 export default async function ScrapingJobDetails({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const data = await getScrapingJobs(slug);
+  const data = await getScrapingJobData(slug);
 
   return (
     <div className="p-6 space-y-6">

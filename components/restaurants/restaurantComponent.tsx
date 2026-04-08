@@ -51,8 +51,8 @@ export default function RestaurantComponent() {
       const data = await response.json();
       setRestaurants(data.data);
       setMetaPagination(data.meta);
-    } catch (error) {
-      console.error("Failed to fetch filtered data:", error);
+    } catch {
+      // error state can be handled per-component if needed
     } finally {
       setIsLoading(false);
     }

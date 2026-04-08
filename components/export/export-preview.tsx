@@ -85,8 +85,7 @@ export function ExportPreview({ filters }: ExportPreviewProps) {
       setPreviewData(data.data);
       setMeta(data.meta);
       setCurrentPage(page);
-    } catch (error) {
-      console.error("Preview fetch error:", error);
+    } catch {
       toast.error("Failed to fetch preview data");
     } finally {
       setIsLoading(false);

@@ -37,6 +37,10 @@ export function ScrapingModal({
   const { user } = useAuth();
 
   const searchRestaurants = async () => {
+    if (!user?.id) {
+      toast.error("Session not ready, please try again");
+      return;
+    }
     try {
       const cookieString = await getCookies();
       const res = await axios.post(
@@ -55,10 +59,8 @@ export function ScrapingModal({
       );
 
       const { jobId } = res.data;
-      console.log("Job queued:", jobId);
       toast.success(`Job queued: ${jobId}`);
-    } catch (err) {
-      console.error("Gagal request:", err);
+    } catch {
       toast.error("Failed to queue job");
     }
   };
@@ -82,8 +84,8 @@ export function ScrapingModal({
       setRadius("1");
 
       onClose();
-    } catch (error) {
-      console.error("Failed to submit scraping job:", error);
+    } catch {
+      // error already shown via toast in searchRestaurants
     } finally {
       setIsLoading(false);
     }

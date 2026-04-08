@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const format = searchParams.get("format") || "csv";
   const status = searchParams.get("status") || "all";
+  const rating = searchParams.get("rating") || "all";
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
   const fields = searchParams.get("fields")?.split(",") || [
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   try {
     // Build Prisma query with filters
-    const where: any = {
+    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
       userId: session.user.id,
     };
 
@@ -48,14 +49,20 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    // Note: Date filtering is based on related data, not direct Lead fields
-    // We'll filter by the latest activity or note date if needed
+    if (rating !== "all") {
+      const ratingValue = parseFloat(rating);
+      if (!Number.isNaN(ratingValue)) {
+        where.rating = { gte: ratingValue };
+      }
+    }
+
     if (dateFrom || dateTo) {
-      // For now, we'll skip date filtering since Lead doesn't have createdAt
-      // This can be implemented later using related data if needed
-      console.log(
-        "Date filtering requested but not implemented for Lead model"
-      );
+      where.createdAt = {
+        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+        ...(dateTo
+          ? { lte: new Date(new Date(dateTo).setHours(23, 59, 59, 999)) }
+          : {}),
+      };
     }
 
     // Fetch leads with related data
@@ -64,39 +71,43 @@ export async function GET(req: NextRequest) {
       include: {
         leadStatus: true,
         company: true,
-        leadNotes: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-        leadActivity: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
+        leadNotes: { orderBy: { createdAt: "desc" }, take: 1 },
+        leadActivity: { orderBy: { createdAt: "desc" }, take: 1 },
       },
-      // Note: Lead model doesn't have createdAt, so we'll order by id instead
-      orderBy: { id: "desc" },
+      orderBy: { createdAt: "desc" },
     });
+
+    if (leads.length === 0) {
+      return NextResponse.json(
+        { error: "No data to export with the current filters" },
+        { status: 404 }
+      );
+    }
 
     // Format data for export
     const formattedData = formatDataForExport(leads, fields);
 
     // Generate file based on format
-    let fileBuffer: Buffer;
+    let fileBytes: Uint8Array;
     let filename: string;
 
     switch (format.toLowerCase()) {
       case "csv":
-        fileBuffer = Buffer.from(convertToCSV(formattedData, fields));
+        fileBytes = new TextEncoder().encode(
+          convertToCSV(formattedData, fields)
+        );
         filename = generateFilename("csv");
         break;
 
       case "excel":
-        fileBuffer = await convertToExcel(formattedData, fields);
+        fileBytes = await convertToExcel(formattedData, fields);
         filename = generateFilename("excel");
         break;
 
       case "json":
-        fileBuffer = Buffer.from(convertToJSON(formattedData, fields));
+        fileBytes = new TextEncoder().encode(
+          convertToJSON(formattedData, fields)
+        );
         filename = generateFilename("json");
         break;
 
@@ -107,20 +118,21 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    // Return file as response
-    const response = new NextResponse(fileBuffer as any);
-    response.headers.set("Content-Type", getContentType(format));
-    response.headers.set(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
-    response.headers.set("Content-Length", fileBuffer.length.toString());
-
-    return response;
+    return new NextResponse(fileBytes, {
+      status: 200,
+      headers: {
+        "Content-Type": getContentType(format),
+        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Length": fileBytes.byteLength.toString(),
+      },
+    });
   } catch (error) {
-    console.error("Export error:", error);
+    console.error("[Export GET] Failed:", error);
     return NextResponse.json(
-      { error: "Failed to export data" },
+      {
+        error: "Failed to export data",
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
@@ -140,6 +152,7 @@ export async function POST(req: NextRequest) {
   try {
     const {
       status,
+      rating,
       dateFrom,
       dateTo,
       fields,
@@ -148,7 +161,7 @@ export async function POST(req: NextRequest) {
     } = await req.json();
 
     // Build Prisma query with filters
-    const where: any = {
+    const where: Parameters<typeof prisma.lead.findMany>[0]["where"] = {
       userId: session.user.id,
     };
 
@@ -158,12 +171,20 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Note: Date filtering is based on related data, not direct Lead fields
+    if (rating && rating !== "all") {
+      const ratingValue = parseFloat(rating);
+      if (!Number.isNaN(ratingValue)) {
+        where.rating = { gte: ratingValue };
+      }
+    }
+
     if (dateFrom || dateTo) {
-      // For now, we'll skip date filtering since Lead doesn't have createdAt
-      console.log(
-        "Date filtering requested but not implemented for Lead model"
-      );
+      where.createdAt = {
+        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+        ...(dateTo
+          ? { lte: new Date(new Date(dateTo).setHours(23, 59, 59, 999)) }
+          : {}),
+      };
     }
 
     // Get total count for pagination
@@ -184,8 +205,7 @@ export async function POST(req: NextRequest) {
           take: 1,
         },
       },
-      // Note: Lead model doesn't have createdAt, so we'll order by id instead
-      orderBy: { id: "desc" },
+      orderBy: { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -203,7 +223,6 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Preview error:", error);
     return NextResponse.json(
       { error: "Failed to fetch preview data" },
       { status: 500 }

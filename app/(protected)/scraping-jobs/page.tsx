@@ -76,8 +76,7 @@ function ScrapingJobsContent() {
       const data = await response.json();
       setJobs(data.data);
       setMeta(data.meta);
-    } catch (error) {
-      console.error("Failed to fetch scraping jobs:", error);
+    } catch {
       toast.error("Failed to fetch scraping jobs");
     } finally {
       setIsLoading(false);

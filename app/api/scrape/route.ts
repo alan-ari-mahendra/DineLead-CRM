@@ -25,6 +25,13 @@ export async function GET(req: Request) {
   if (!jobId)
     return NextResponse.json({ error: "jobId required" }, { status: 400 });
 
+  const dbJob = await prisma.scrapingJob.findFirst({
+    where: { jobId: parseInt(jobId), userId: session.user.id },
+  });
+  if (!dbJob) {
+    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+  }
+
   const job = await Job.fromId(scrapeQueue, jobId);
   return NextResponse.json({
     id: job?.id,
@@ -61,12 +68,19 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const job = await scrapeQueue.add("search", {
-    location,
-    radius: radius || 1500,
-    category: category,
-    scrapeJobId: scrapeJob.id,
-  });
+  const job = await scrapeQueue.add(
+    "search",
+    {
+      location,
+      radius: radius || 1500,
+      category: category,
+      scrapeJobId: scrapeJob.id,
+    },
+    {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 3000 },
+    }
+  );
 
   await prisma.scrapingJob.update({
     where: { id: scrapeJob.id },
