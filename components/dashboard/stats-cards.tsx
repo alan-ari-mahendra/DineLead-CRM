@@ -92,13 +92,13 @@ export function StatsCards() {
                     <p className="text-sm font-medium text-gray-600 mb-1">
                       {stat.title}
                     </p>
-                    <p className="text-3xl font-bold text-gray-900 mb-1">
+                    <div className="text-3xl font-bold text-gray-900 mb-1">
                       {isLoading ? (
                         <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
                       ) : (
                         statData?.value.toLocaleString() || "0"
                       )}
-                    </p>
+                    </div>
                     <p className="text-xs text-gray-500 mb-2">
                       {statData?.description || "Loading..."}
                     </p>

@@ -181,7 +181,7 @@ export async function GET() {
       type: activity.type,
       activity: activity.activity,
       description: activity.description,
-      leadName: activity.lead.name,
+      leadName: activity.lead?.name ?? "Unknown",
       createdAt: activity.createdAt
     }));
 
@@ -199,6 +199,7 @@ export async function GET() {
     });
 
   } catch (error) {
+    console.error("[/api/dashboard/stats] error:", error, (error as { meta?: unknown })?.meta);
     return NextResponse.json(
       { error: "Failed to fetch dashboard statistics" },
       { status: 500 }

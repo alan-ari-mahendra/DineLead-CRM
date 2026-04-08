@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   }
-  const { userId, location, radius, category } = await req.json();
+  const { location, radius, category } = await req.json();
 
   if (!location) {
     return NextResponse.json(
@@ -58,34 +58,42 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const scrapeJob = await prisma.scrapingJob.create({
-    data: {
-      userId: userId,
-      keyword: category,
-      location: location,
-      status: "PENDING",
-      jobId: 0,
-    },
-  });
+  try {
+    const scrapeJob = await prisma.scrapingJob.create({
+      data: {
+        userId: session.user.id,
+        keyword: category,
+        location: location,
+        status: "PENDING",
+        jobId: 0,
+      },
+    });
 
-  const job = await scrapeQueue.add(
-    "search",
-    {
-      location,
-      radius: radius || 1500,
-      category: category,
-      scrapeJobId: scrapeJob.id,
-    },
-    {
-      attempts: 3,
-      backoff: { type: "exponential", delay: 3000 },
-    }
-  );
+    const job = await scrapeQueue.add(
+      "search",
+      {
+        location,
+        radius: radius || 1500,
+        category: category,
+        scrapeJobId: scrapeJob.id,
+      },
+      {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 3000 },
+      }
+    );
 
-  await prisma.scrapingJob.update({
-    where: { id: scrapeJob.id },
-    data: { jobId: parseInt(job.id || "0") },
-  });
+    await prisma.scrapingJob.update({
+      where: { id: scrapeJob.id },
+      data: { jobId: parseInt(job.id || "0") },
+    });
 
-  return NextResponse.json({ jobId: job.id, status: "queued" });
+    return NextResponse.json({ jobId: job.id, status: "queued" });
+  } catch (error) {
+    console.error("[/api/scrape] error:", error, (error as { meta?: unknown })?.meta);
+    return NextResponse.json(
+      { error: "Failed to enqueue scrape job" },
+      { status: 500 }
+    );
+  }
 }
