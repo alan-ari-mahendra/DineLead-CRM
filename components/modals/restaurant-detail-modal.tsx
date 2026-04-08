@@ -30,6 +30,10 @@ import {
   MessageSquare,
   User,
   Clock,
+  Sparkles,
+  Copy,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { LeadActivity, LeadNote } from "@/types/restaurant.type";
 import { ScrollArea } from "../ui/scroll-area";
@@ -64,9 +68,61 @@ export function RestaurantDetailModal({
   const [status, setStatus] = useState("prospect");
   const { user } = useAuth();
 
+  // AI Email Generator state
+  const [aiTone, setAiTone] = useState<"professional" | "friendly" | "casual">(
+    "professional"
+  );
+  const [aiLanguage, setAiLanguage] = useState<"id" | "en">("id");
+  const [aiSubject, setAiSubject] = useState("");
+  const [aiBody, setAiBody] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiCopied, setAiCopied] = useState<"subject" | "body" | "all" | null>(
+    null
+  );
+
+  const handleGenerateEmail = async () => {
+    if (!restaurant) return;
+    setAiLoading(true);
+    try {
+      const res = await axios.post(`/api/ai/generate-email`, {
+        leadId: restaurant.id,
+        tone: aiTone,
+        language: aiLanguage,
+      });
+      setAiSubject(res.data.subject || "");
+      setAiBody(res.data.body || "");
+      toast.success("Email generated successfully");
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { error?: string } } }).response?.data
+              ?.error
+          : "Failed to generate email";
+      toast.error(message || "Failed to generate email");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleCopy = async (text: string, key: "subject" | "body" | "all") => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setAiCopied(key);
+      setTimeout(() => setAiCopied(null), 1500);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
   useEffect(() => {
     setRestaurant(initRestaurant);
     setStatus(initRestaurant?.leadStatus.name.toLowerCase() || "prospect");
+    // Reset AI email state when switching restaurants
+    setAiSubject("");
+    setAiBody("");
+    setAiCopied(null);
+    setNotes("");
+    setNewActivity("");
   }, [initRestaurant]);
 
   if (!restaurant) return null;
@@ -182,10 +238,14 @@ export function RestaurantDetailModal({
         </DialogHeader>
 
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="ai-email">
+              <Sparkles className="h-3.5 w-3.5 mr-1" />
+              AI Email
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4">
@@ -404,6 +464,172 @@ export function RestaurantDetailModal({
                 </ScrollArea>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="ai-email" className="space-y-4">
+            <div className="space-y-4 p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-semibold">
+                  AI Outreach Email Generator
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Generate a personalized cold outreach email for{" "}
+                <span className="font-medium">{restaurant.name}</span> powered by
+                Groq AI.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Tone</Label>
+                  <Select
+                    value={aiTone}
+                    onValueChange={(v) =>
+                      setAiTone(v as "professional" | "friendly" | "casual")
+                    }
+                  >
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="friendly">Friendly</SelectItem>
+                      <SelectItem value="casual">Casual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Language</Label>
+                  <Select
+                    value={aiLanguage}
+                    onValueChange={(v) => setAiLanguage(v as "id" | "en")}
+                  >
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="id">Bahasa Indonesia</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleGenerateEmail}
+                disabled={aiLoading}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                {aiLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {aiSubject ? "Regenerate Email" : "Generate Email"}
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {(aiSubject || aiBody) && (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Subject</Label>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopy(aiSubject, "subject")}
+                      className="h-7 px-2"
+                    >
+                      {aiCopied === "subject" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  <Input
+                    value={aiSubject}
+                    onChange={(e) => setAiSubject(e.target.value)}
+                    className="bg-input"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Body</Label>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleCopy(aiBody, "body")}
+                      className="h-7 px-2"
+                    >
+                      {aiCopied === "body" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={aiBody}
+                    onChange={(e) => setAiBody(e.target.value)}
+                    className="min-h-[220px] bg-input font-mono text-sm"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() =>
+                      handleCopy(`Subject: ${aiSubject}\n\n${aiBody}`, "all")
+                    }
+                  >
+                    {aiCopied === "all" ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy Full Email
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      const mailto = `mailto:${restaurant.email || ""}?subject=${encodeURIComponent(
+                        aiSubject
+                      )}&body=${encodeURIComponent(aiBody)}`;
+                      window.location.href = mailto;
+                    }}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    Open in Mail
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {!aiSubject && !aiBody && !aiLoading && (
+              <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500 border border-dashed rounded-lg">
+                <Sparkles className="h-12 w-12 mb-4 text-gray-400" />
+                <p className="text-lg font-medium">No Email Generated Yet</p>
+                <p className="text-sm text-gray-400 max-w-sm">
+                  Choose your preferred tone and language, then click Generate
+                  Email to let AI craft a personalized outreach for you.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 

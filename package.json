@@ -57,6 +57,7 @@
     "embla-carousel-react": "8.5.1",
     "exceljs": "^4.4.0",
     "geist": "latest",
+    "groq-sdk": "^1.1.2",
     "input-otp": "1.4.1",
     "json2csv": "^6.0.0-alpha.2",
     "lucide-react": "^0.454.0",
