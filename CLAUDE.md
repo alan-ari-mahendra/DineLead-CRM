@@ -58,3 +58,7 @@ Redis must be running locally on port `6379` for the scraping worker.
 ## Path Aliases
 
 `@/*` maps to the project root. Example: `@/lib/prisma`, `@/components/ui/button`, `@/types/restaurant.type`.
+
+## Behavior Rules
+
+- **Always ask before making important decisions** — do not assume or decide unilaterally on anything that affects architecture, data models, file structure, or business logic. When in doubt, ask the user first.
