@@ -1,35 +1,22 @@
 "use client";
 
-import { Suspense } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Clock,
   CheckCircle,
   XCircle,
   Play,
-  MoreHorizontal,
   RefreshCw,
+  Loader2,
+  Plus,
+  MapPin,
+  Timer,
+  ChevronLeft,
+  ChevronRight,
+  Search as SearchIcon,
 } from "lucide-react";
-import OpenScrapingModalButton from "@/components/scrape-job/openScrapingModalButton";
-import { useState, useEffect, useCallback } from "react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ScrapingModal } from "@/components/modals/scraping-modal";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -52,78 +39,47 @@ interface PaginationMeta {
 
 function ScrapingJobsContent() {
   const [jobs, setJobs] = useState<ScrapingJob[]>([]);
-  const [meta, setMeta] = useState<PaginationMeta>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    lastPage: 1,
-  });
+  const [meta, setMeta] = useState<PaginationMeta>({ page: 1, limit: 10, total: 0, lastPage: 1 });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isScrapingModalOpen, setIsScrapingModalOpen] = useState(false);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const page = Number(searchParams.get("page") || 1);
 
-  // Fetch scraping jobs
   const fetchScrapingJobs = useCallback(async (pageNum: number = 1) => {
     try {
-      const response = await fetch(
-        `/api/scraping-job?page=${pageNum}&limit=10`
-      );
-      if (!response.ok) throw new Error("Failed to fetch scraping jobs");
-
+      const response = await fetch(`/api/scraping-job?page=${pageNum}&limit=10`);
+      if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
       setJobs(data.data);
       setMeta(data.meta);
-    } catch {
-      toast.error("Failed to fetch scraping jobs");
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
+    } catch { toast.error("Failed to fetch scraping jobs"); }
+    finally { setIsLoading(false); setIsRefreshing(false); }
   }, []);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchScrapingJobs(page);
-  }, [page, fetchScrapingJobs]);
+  useEffect(() => { fetchScrapingJobs(page); }, [page, fetchScrapingJobs]);
 
-  // Refresh data (for new jobs)
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await fetchScrapingJobs(page);
   }, [page, fetchScrapingJobs]);
 
-  // Handle page change
   const handlePageChange = (newPage: number) => {
     router.push(`/scraping-jobs?page=${newPage}`);
   };
 
-  // Listen for new scraping job events
   useEffect(() => {
-    const handleNewJob = () => {
-      // Refresh data when new job is added
-      handleRefresh();
-    };
-
-    // Listen for custom event from scraping modal
+    const handleNewJob = () => handleRefresh();
     window.addEventListener("scraping-job-added", handleNewJob);
-
-    return () => {
-      window.removeEventListener("scraping-job-added", handleNewJob);
-    };
+    return () => window.removeEventListener("scraping-job-added", handleNewJob);
   }, [handleRefresh]);
 
-  // Auto-refresh every 30 seconds for real-time status updates
   useEffect(() => {
     const interval = setInterval(() => {
-      // Only auto-refresh if not currently refreshing and not on first load
-      if (!isRefreshing && !isLoading) {
-        fetchScrapingJobs(page);
-      }
-    }, 30000); // 30 seconds
-
+      if (!isRefreshing && !isLoading) fetchScrapingJobs(page);
+    }, 30000);
     return () => clearInterval(interval);
   }, [page, fetchScrapingJobs, isRefreshing, isLoading]);
 
@@ -131,270 +87,217 @@ function ScrapingJobsContent() {
     if (!end) return "-";
     const diff = new Date(end).getTime() - new Date(start).getTime();
     if (diff <= 0) return "-";
-
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-
     return `${minutes}m ${remainingSeconds}s`;
   }
 
   function formatDate(date: string) {
-    return new Date(date).toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    return new Date(date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   }
 
-  const getStatusIcon = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
-      case "COMPLETED":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "RUNNING":
-        return <Play className="h-4 w-4 text-blue-600" />;
-      case "FAILED":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      case "PENDING":
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      default:
-        return <Clock className="h-4 w-4 text-gray-600" />;
+      case "COMPLETED": return { icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", dot: "bg-emerald-500", label: "Completed" };
+      case "RUNNING": return { icon: Play, color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-200", dot: "bg-blue-500 animate-pulse", label: "Running" };
+      case "FAILED": return { icon: XCircle, color: "text-red-600", bg: "bg-red-50", border: "border-red-200", dot: "bg-red-500", label: "Failed" };
+      case "PENDING": return { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", dot: "bg-amber-500", label: "Pending" };
+      default: return { icon: Clock, color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-200", dot: "bg-gray-500", label: status };
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return "bg-green-100 text-green-800";
-      case "RUNNING":
-        return "bg-blue-100 text-blue-800";
-      case "FAILED":
-        return "bg-red-100 text-red-800";
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Scraping Jobs
-            </h1>
-            <p className="text-gray-600">
-              Monitor and manage your data scraping operations.
-            </p>
-          </div>
-          <OpenScrapingModalButton />
-        </div>
-
-        <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      </div>
-    );
-  }
+  const runningJobs = jobs.filter(j => j.status === "RUNNING" || j.status === "PENDING");
+  const completedJobs = jobs.filter(j => j.status === "COMPLETED" || j.status === "FAILED");
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Scraping Jobs
-          </h1>
-          <p className="text-gray-600">
-            Monitor and manage your data scraping operations.
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Scraping Jobs</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {meta.total} total jobs · {runningJobs.length} active
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2">
           <Button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            variant="outline"
+            onClick={() => setIsScrapingModalOpen(true)}
             size="sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
+            <Plus className="h-4 w-4 mr-1.5" />
+            New Scrape
           </Button>
-          <OpenScrapingModalButton />
+          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing} className="shadow-sm">
+            {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        {jobs.map((job: ScrapingJob) => (
-          <Link
-            key={job.id}
-            href={`/scraping-jobs/${job.id}`}
-            className="block"
-          >
-            <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {getStatusIcon(job.status)}
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {job.keyword}
-                      </h3>
-                      <p className="text-sm text-gray-600">{job.location}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-8">
-                    <Badge className={getStatusColor(job.status)}>
-                      {job.status}
-                    </Badge>
-
-                    <div className="flex flex-col">
-                      <div className="items-center flex-row flex gap-2">
-                        <p className="text-xs text-gray-500 text-center">
-                          Duration
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 text-center">
-                          {formatDuration(job.createdAt, job.completedAt)}
-                        </p>
-                      </div>
-
-                      <div className="items-center flex-row flex gap-2">
-                        <p className="text-xs text-gray-500 text-center">
-                          Started
-                        </p>
-                        <p className="text-sm font-medium text-gray-900 text-center">
-                          {formatDate(job.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="start">
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/scraping-jobs/${job.id}`}>Views</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Delete</DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-gray-200" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-gray-200 rounded w-1/4" />
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-        {jobs.length < 1 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12 mb-4 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 17v-2h6v2m-7-8h8M5 7h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z"
-              />
-            </svg>
-            <p className="text-lg font-medium">No Data To Display</p>
-            <p className="text-sm text-gray-400">
-              Try adjusting your filters or add new data.
-            </p>
+                <div className="h-6 bg-gray-200 rounded w-20" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="text-center py-20">
+          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <SearchIcon className="h-8 w-8 text-gray-300" />
           </div>
-        )}
-      </div>
+          <p className="text-lg font-medium text-gray-500">No scraping jobs yet</p>
+          <p className="text-sm text-gray-400 mt-1 mb-4">Start by creating your first scraping job</p>
+          <Button onClick={() => setIsScrapingModalOpen(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Plus className="h-4 w-4 mr-1.5" /> New Scrape
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Active Jobs */}
+          {runningJobs.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Active</h2>
+              <div className="space-y-3">
+                {runningJobs.map((job) => {
+                  const status = getStatusConfig(job.status);
+                  return (
+                    <Link key={job.id} href={`/scraping-jobs/${job.id}`} className="block group">
+                      <div className={`bg-white rounded-xl border-2 ${status.border} p-5 hover:shadow-md transition-all`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-lg ${status.bg} flex items-center justify-center`}>
+                            <status.icon className={`h-5 w-5 ${status.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                                {job.keyword}
+                              </h3>
+                              <div className="flex items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${status.dot}`} />
+                                <span className={`text-xs font-medium ${status.color}`}>{status.label}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                                <MapPin className="h-3 w-3" /> {job.location}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                                <Clock className="h-3 w-3" /> {formatDate(job.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-      {jobs.length > 0 && (
-        <div className="mt-6">
-          <Pagination>
-            <PaginationContent>
-              {/* Previous */}
-              <PaginationItem>
-                <PaginationPrevious
-                  onClick={() => handlePageChange(page - 1)}
-                  className={
-                    page <= 1
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
+          {/* Completed Jobs */}
+          {completedJobs.length > 0 && (
+            <div>
+              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">History</h2>
+              <div className="space-y-2">
+                {completedJobs.map((job) => {
+                  const status = getStatusConfig(job.status);
+                  return (
+                    <Link key={job.id} href={`/scraping-jobs/${job.id}`} className="block group">
+                      <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm hover:border-gray-200 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg ${status.bg} flex items-center justify-center flex-shrink-0`}>
+                            <status.icon className={`h-4 w-4 ${status.color}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                              {job.keyword}
+                            </h3>
+                            <span className="text-xs text-gray-400">{job.location}</span>
+                          </div>
+                          <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <Timer className="h-3 w-3" />
+                              {formatDuration(job.createdAt, job.completedAt)}
+                            </span>
+                            <span>{formatDate(job.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                            <span className="text-xs text-gray-500">{status.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
-              {/* Render page numbers */}
-              {Array.from({ length: meta.lastPage }, (_, i) => i + 1).map(
-                (p) => (
-                  <PaginationItem key={p}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(p)}
-                      isActive={p === page}
-                      className="cursor-pointer"
-                    >
-                      {p}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-
-              {meta.lastPage > 5 && (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              )}
-
-              {/* Next */}
-              <PaginationItem>
-                <PaginationNext
-                  onClick={() => handlePageChange(page + 1)}
-                  className={
-                    page >= meta.lastPage
-                      ? "pointer-events-none opacity-50"
-                      : "cursor-pointer"
-                  }
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+      {/* Pagination */}
+      {meta.lastPage > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-xs text-gray-400">
+            Page {page} of {meta.lastPage} · {meta.total} jobs
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={() => handlePageChange(page - 1)} disabled={page <= 1} className="h-8 w-8 p-0">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: Math.min(meta.lastPage, 5) }, (_, i) => {
+              let p: number;
+              if (meta.lastPage <= 5) p = i + 1;
+              else if (page <= 3) p = i + 1;
+              else if (page >= meta.lastPage - 2) p = meta.lastPage - 4 + i;
+              else p = page - 2 + i;
+              return (
+                <Button key={p} variant={p === page ? "default" : "outline"} size="sm" onClick={() => handlePageChange(p)}
+                  className={`h-8 w-8 p-0 text-xs ${p === page ? "bg-gray-900 text-white" : ""}`}>
+                  {p}
+                </Button>
+              );
+            })}
+            <Button variant="outline" size="sm" onClick={() => handlePageChange(page + 1)} disabled={page >= meta.lastPage} className="h-8 w-8 p-0">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
+
+      <ScrapingModal isOpen={isScrapingModalOpen} onClose={() => setIsScrapingModalOpen(false)} onJobAdded={handleRefresh} />
     </div>
   );
 }
 
-// Loading component for Suspense fallback
 function ScrapingJobsLoading() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Scraping Jobs
-          </h1>
-          <p className="text-gray-600">
-            Monitor and manage your data scraping operations.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Scraping Jobs</h1>
+          <p className="text-sm text-gray-500 mt-1">Loading...</p>
         </div>
-        <OpenScrapingModalButton />
       </div>
-
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-300" />
       </div>
     </div>
   );
 }
 
-// Main page component with Suspense boundary
 export default function ScrapingJobsPage() {
   return (
     <Suspense fallback={<ScrapingJobsLoading />}>
