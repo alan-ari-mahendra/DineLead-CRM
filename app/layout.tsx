@@ -11,8 +11,8 @@ export const metadata: Metadata = {
   description: "Modern restaurant data management platform",
   generator: "v0.app",
   icons: {
-    icon: "/dinelead-logo.png",
-    apple: "/dinelead-logo.png",
+    icon: "/favicon-DL-removebg-preview.png",
+    apple: "/favicon-DL-removebg-preview.png",
   },
 };
 

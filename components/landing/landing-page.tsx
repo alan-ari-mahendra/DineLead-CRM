@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Search,
   LayoutDashboard,
@@ -68,7 +68,7 @@ function Navbar() {
     >
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl" style={{ color: C.dark }}>
-          <Image src="/dinelead-logo.png" alt="DineLead" width={100} height={100} className="rounded-md" />
+          <Image src="/site-logo-DL-removebg-preview.png" alt="DineLead" width={100} height={100} className="rounded-md" />
           {/* <span>Dine<span style={{ color: C.sky }}>Lead</span></span> */}
         </Link>
 
@@ -609,7 +609,7 @@ function Footer() {
               Dine<span style={{ color: C.sky }}>Lead</span>
             </div> */}
             <Link href="/" className="flex items-center gap-2 font-bold text-xl" style={{ color: C.dark }}>
-              <Image src="/dinelead-logo.png" alt="DineLead" width={100} height={100} className="rounded-md" />
+              <Image src="/site-logo-DL-removebg-preview.png" alt="DineLead" width={100} height={100} className="rounded-md" />
               {/* <span>Dine<span style={{ color: C.sky }}>Lead</span></span> */}
             </Link>
             <p className="text-sm leading-relaxed mb-4" style={{ color: "#94a3b8" }}>

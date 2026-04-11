@@ -31,7 +31,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!collapsed && (
           <div className="flex items-center space-x-2">
-            <Image src="/dinelead-logo.png" alt="DineLead" width={32} height={32} className="rounded-lg" />
+            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={40} height={40} className="rounded-lg" />
             <span className="font-bold text-gray-900">DineLead</span>
           </div>
         )}
