@@ -24,20 +24,25 @@ import {
   ExternalLink,
   Check,
 } from "lucide-react";
+import { LayoutTextFlip } from "@/components/ui/layout-text-flip";
 
 /* ─── palette (no shadcn, all inline) ─── */
 const C = {
-  sky: "#0ea5e9",
-  skyLight: "#e0f2fe",
-  skyLighter: "#f0f9ff",
-  green: "#10b981",
-  greenHover: "#059669",
+  sky: "#2563eb",
+  skyDark: "#1e3a8a",
+  skyMid: "#1d4ed8",
+  skyBright: "#3b82f6",
+  skyAccent: "#0ea5e9",
+  skyLight: "#dbeafe",
+  skyLighter: "#eff6ff",
   dark: "#0f172a",
   text: "#1e293b",
   muted: "#64748b",
   light: "#f8fafc",
   border: "#e2e8f0",
   white: "#ffffff",
+  heroGradient: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 40%, #0ea5e9 100%)",
+  ctaGradient: "linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #0ea5e9 100%)",
 };
 
 /* ═══════════════════════ NAVBAR ═══════════════════════ */
@@ -79,7 +84,7 @@ function Navbar() {
           <Link href="/login" className="text-sm font-medium px-4 py-2 rounded-lg hover:opacity-80 transition-opacity" style={{ color: C.text }}>
             Log in
           </Link>
-          <Link href="/register" className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white transition-colors" style={{ background: C.green }} onMouseEnter={(e) => (e.currentTarget.style.background = C.greenHover)} onMouseLeave={(e) => (e.currentTarget.style.background = C.green)}>
+          <Link href="/register" className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white transition-all hover:brightness-110" style={{ background: C.skyMid }}>
             Get Started Free
           </Link>
         </div>
@@ -97,7 +102,7 @@ function Navbar() {
             </a>
           ))}
           <Link href="/login" className="text-sm py-2" style={{ color: C.text }}>Log in</Link>
-          <Link href="/register" className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white text-center" style={{ background: C.green }}>
+          <Link href="/register" className="text-sm font-semibold px-5 py-2.5 rounded-lg text-white text-center" style={{ background: C.skyMid }}>
             Get Started Free
           </Link>
         </div>
@@ -109,30 +114,40 @@ function Navbar() {
 /* ═══════════════════════ HERO ═══════════════════════ */
 function Hero() {
   return (
-    <section className="pt-28 pb-16 md:pt-36 md:pb-24" style={{ background: `linear-gradient(180deg, ${C.skyLighter} 0%, ${C.skyLight} 50%, ${C.white} 100%)` }}>
-      <div className="max-w-7xl mx-auto px-6 text-center">
+    <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden" style={{ background: C.heroGradient }}>
+      {/* Subtle pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+
+      <div className="relative max-w-7xl mx-auto px-6 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6" style={{ background: `${C.sky}15`, color: C.sky }}>
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: C.green }} />
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6" style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff" }}>
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#38bdf8" }} />
             Restaurant Lead Scraping & CRM Platform
           </span>
         </motion.div>
 
-        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6" style={{ color: C.dark }}>
-          Scrape restaurant data and<br className="hidden sm:block" />
-          <span style={{ color: C.sky }}>turn leads into deals</span>
-        </motion.h1>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mb-6">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white">
+            <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 [&>span]:!drop-shadow-none">
+              <LayoutTextFlip
+                text="restaurant data and"
+                words={["Discover", "Find", "Source", "Collect"]}
+                className="!text-4xl sm:!text-5xl lg:!text-6xl !font-extrabold"
+              />
+            </span>
+          </h1>
+        </motion.div>
 
-        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: C.muted }}>
+        <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-lg max-w-2xl mx-auto mb-10 leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
           DineLead automatically finds restaurants from any city, organizes them in a smart CRM pipeline, and lets AI write your outreach emails — so you close deals, not hunt contacts.
         </motion.p>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-wrap items-center justify-center gap-4 mb-14">
-          <Link href="/register" className="inline-flex items-center gap-2 text-white font-semibold px-7 py-3.5 rounded-lg text-base transition-colors" style={{ background: C.green }} onMouseEnter={(e) => (e.currentTarget.style.background = C.greenHover)} onMouseLeave={(e) => (e.currentTarget.style.background = C.green)}>
+          <Link href="/register" className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-lg text-base transition-all hover:brightness-110" style={{ background: C.white, color: C.skyMid }}>
             Get Started Free
             <ArrowRight size={16} />
           </Link>
-          <a href="#how-it-works" className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-lg text-base border-2 transition-colors" style={{ color: C.text, borderColor: C.border }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.sky)} onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}>
+          <a href="#how-it-works" className="inline-flex items-center gap-2 font-semibold px-7 py-3.5 rounded-lg text-base border-2 transition-colors text-white" style={{ borderColor: "rgba(255,255,255,0.3)" }} onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)")} onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)")}>
             See How It Works
           </a>
         </motion.div>
@@ -191,7 +206,7 @@ function DashboardMockup() {
               <s.icon size={14} style={{ color: C.sky }} />
             </div>
             <div className="text-xl font-bold" style={{ color: C.dark }}>{s.value}</div>
-            <span className="text-xs font-medium" style={{ color: C.green }}>{s.change}</span>
+            <span className="text-xs font-medium" style={{ color: C.skyBright }}>{s.change}</span>
           </div>
         ))}
       </div>
@@ -218,8 +233,8 @@ function DashboardMockup() {
                 <td className="px-4 py-3 hidden sm:table-cell" style={{ color: C.muted }}>{r.phone}</td>
                 <td className="px-4 py-3 hidden sm:table-cell">
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{
-                    background: r.status === "Contacted" ? `${C.sky}15` : r.status === "Prospect" ? `${C.green}15` : "#f1f5f9",
-                    color: r.status === "Contacted" ? C.sky : r.status === "Prospect" ? C.green : C.muted,
+                    background: r.status === "Contacted" ? `${C.sky}15` : r.status === "Prospect" ? `${C.skyBright}15` : "#f1f5f9",
+                    color: r.status === "Contacted" ? C.sky : r.status === "Prospect" ? C.skyBright : C.muted,
                   }}>{r.status}</span>
                 </td>
               </tr>
@@ -322,17 +337,17 @@ function ScrapingMockup() {
         <div className="h-10 px-4 rounded-lg flex items-center text-sm font-medium" style={{ border: `1px solid ${C.border}`, color: C.muted }}>
           5 km
         </div>
-        <button className="h-10 px-5 rounded-lg text-sm font-semibold text-white" style={{ background: C.green }}>
+        <button className="h-10 px-5 rounded-lg text-sm font-semibold text-white" style={{ background: C.skyMid }}>
           Scrape
         </button>
       </div>
       <div className="rounded-lg p-4" style={{ background: C.light, border: `1px solid ${C.border}` }}>
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-semibold" style={{ color: C.dark }}>Scraping Progress</span>
-          <span className="text-xs font-bold" style={{ color: C.green }}>78%</span>
+          <span className="text-xs font-bold" style={{ color: C.skyBright }}>78%</span>
         </div>
         <div className="h-2 rounded-full overflow-hidden" style={{ background: C.border }}>
-          <div className="h-full rounded-full" style={{ width: "78%", background: C.green }} />
+          <div className="h-full rounded-full" style={{ width: "78%", background: C.skyBright }} />
         </div>
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs" style={{ color: C.muted }}>156 restaurants found</span>
@@ -348,7 +363,7 @@ function PipelineMockup() {
     { title: "New", color: "#94a3b8", items: ["Bakmi GM", "Es Teler 77"] },
     { title: "Prospect", color: C.sky, items: ["Sate Khas Senayan", "J.CO Donuts"] },
     { title: "Contacted", color: "#f59e0b", items: ["Solaria"] },
-    { title: "Closed", color: C.green, items: ["HokBen"] },
+    { title: "Closed", color: C.skyBright, items: ["HokBen"] },
   ];
   return (
     <div className="p-5">
@@ -441,14 +456,14 @@ function ExportMockup() {
       <div className="space-y-2">
         {["Name & Address", "Phone & Website", "Rating & Reviews", "Status & Notes"].map((field) => (
           <label key={field} className="flex items-center gap-2.5 text-xs cursor-pointer" style={{ color: C.text }}>
-            <span className="w-4 h-4 rounded flex items-center justify-center" style={{ background: `${C.green}15`, border: `1px solid ${C.green}40` }}>
-              <Check size={10} style={{ color: C.green }} />
+            <span className="w-4 h-4 rounded flex items-center justify-center" style={{ background: `${C.skyBright}15`, border: `1px solid ${C.skyBright}40` }}>
+              <Check size={10} style={{ color: C.skyBright }} />
             </span>
             {field}
           </label>
         ))}
       </div>
-      <button className="w-full py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: C.green }}>
+      <button className="w-full py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: C.skyMid }}>
         Download Export
       </button>
     </div>
@@ -482,7 +497,7 @@ function HowItWorks() {
             <FadeIn key={s.title} delay={i * 0.1}>
               <div className="relative p-6 rounded-xl text-center" style={{ background: C.white, border: `1px solid ${C.border}` }}>
                 {/* Step number */}
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: C.sky }}>
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: C.skyMid }}>
                   Step {i + 1}
                 </span>
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mt-4 mb-5" style={{ background: `${C.sky}10` }}>
@@ -531,7 +546,7 @@ function MoreFeatures() {
 /* ═══════════════════════ STATS BAR ═══════════════════════ */
 function StatsBar() {
   return (
-    <section className="py-16" style={{ background: C.dark }}>
+    <section className="py-16" style={{ background: C.skyDark }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
           {[
@@ -554,16 +569,17 @@ function StatsBar() {
 /* ═══════════════════════ CTA ═══════════════════════ */
 function CtaSection() {
   return (
-    <section className="py-20 md:py-28" style={{ background: `linear-gradient(135deg, ${C.sky} 0%, #0284c7 100%)` }}>
-      <div className="max-w-3xl mx-auto px-6 text-center">
+    <section className="py-20 md:py-28 relative overflow-hidden" style={{ background: C.ctaGradient }}>
+      <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+      <div className="relative max-w-3xl mx-auto px-6 text-center">
         <FadeIn>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-6">
             Start building your restaurant pipeline today
           </h2>
-          <p className="text-lg mb-10" style={{ color: "rgba(255,255,255,0.8)" }}>
+          <p className="text-lg mb-10" style={{ color: "rgba(255,255,255,0.75)" }}>
             No credit card required. No API keys needed. Free to start.
           </p>
-          <Link href="/register" className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-lg text-base transition-all hover:brightness-110" style={{ background: C.white, color: C.sky }}>
+          <Link href="/register" className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-lg text-base transition-all hover:brightness-110" style={{ background: C.white, color: C.skyMid }}>
             Get Started Free
             <ArrowRight size={16} />
           </Link>
