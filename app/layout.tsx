@@ -7,9 +7,13 @@ import { Providers } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Restaurant CRM Scraper",
+  title: "DineLead - Restaurant CRM",
   description: "Modern restaurant data management platform",
   generator: "v0.app",
+  icons: {
+    icon: "/dinelead-logo.png",
+    apple: "/dinelead-logo.png",
+  },
 };
 
 export default function RootLayout({
