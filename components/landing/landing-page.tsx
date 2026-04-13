@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import HowItWorksB from "./how-it-works-b";
 import {
   Search,
   LayoutDashboard,
@@ -12,7 +13,6 @@ import {
   BarChart3,
   Download,
   MapPin,
-  Filter,
   Send,
   Menu,
   X,
@@ -472,49 +472,6 @@ function ExportMockup() {
 }
 
 /* ═══════════════════════ HOW IT WORKS ═══════════════════════ */
-const steps = [
-  { icon: MapPin, title: "Set your target", desc: "Choose a city, radius and restaurant category. DineLead supports any location worldwide via OpenStreetMap." },
-  { icon: Search, title: "Watch it scrape", desc: "Real-time job monitoring with progress tracking. Restaurants appear as they're discovered — scrape hundreds in minutes." },
-  { icon: Filter, title: "Manage your leads", desc: "Review, filter, add notes and update statuses. Track every lead from Prospect to Contacted to Closed in one pipeline." },
-  { icon: Send, title: "Reach out with AI", desc: "Generate personalized outreach emails in seconds. Choose tone and language — AI uses each restaurant's real details." },
-];
-
-function HowItWorks() {
-  return (
-    <section id="how-it-works" className="py-20 md:py-28" style={{ background: C.light }}>
-      <div className="max-w-7xl mx-auto px-6">
-        <FadeIn className="text-center mb-16">
-          <span className="text-xs font-bold tracking-widest uppercase mb-3 block" style={{ color: C.sky }}>How It Works</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4" style={{ color: C.dark }}>
-            From zero to pipeline in four steps
-          </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: C.muted }}>
-            No complicated setup. No expensive tools. Start scraping restaurant data in minutes.
-          </p>
-        </FadeIn>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((s, i) => (
-            <FadeIn key={s.title} delay={i * 0.1}>
-              <div className="relative p-6 rounded-xl text-center" style={{ background: C.white, border: `1px solid ${C.border}` }}>
-                {/* Step number */}
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: C.skyMid }}>
-                  Step {i + 1}
-                </span>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mt-4 mb-5" style={{ background: `${C.sky}10` }}>
-                  <s.icon size={24} style={{ color: C.sky }} />
-                </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: C.dark }}>{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: C.muted }}>{s.desc}</p>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* ═══════════════════════ MORE FEATURES (cards) ═══════════════════════ */
 const moreFeatures = [
   { icon: Activity, title: "Activity & Notes Tracking", desc: "Log every call, email, meeting and follow-up. Add notes to any lead. Full interaction history." },
@@ -656,7 +613,7 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <FeaturesSection />
-      <HowItWorks />
+      <HowItWorksB />
       <MoreFeatures />
       <StatsBar />
       <CtaSection />
