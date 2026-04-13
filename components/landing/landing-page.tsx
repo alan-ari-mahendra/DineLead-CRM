@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
+import HowItWorksB from "./how-it-works-b";
 import {
   Search,
   LayoutDashboard,
@@ -12,7 +13,6 @@ import {
   BarChart3,
   Download,
   MapPin,
-  Filter,
   Send,
   Menu,
   X,
@@ -26,6 +26,8 @@ import {
   Check,
 } from "lucide-react";
 import { LayoutTextFlip } from "@/components/ui/layout-text-flip";
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
+import { WorldMap } from "@/components/ui/world-map";
 
 /* ─── palette (no shadcn, all inline) ─── */
 const C = {
@@ -472,73 +474,140 @@ function ExportMockup() {
 }
 
 /* ═══════════════════════ HOW IT WORKS ═══════════════════════ */
-const steps = [
-  { icon: MapPin, title: "Set your target", desc: "Choose a city, radius and restaurant category. DineLead supports any location worldwide via OpenStreetMap." },
-  { icon: Search, title: "Watch it scrape", desc: "Real-time job monitoring with progress tracking. Restaurants appear as they're discovered — scrape hundreds in minutes." },
-  { icon: Filter, title: "Manage your leads", desc: "Review, filter, add notes and update statuses. Track every lead from Prospect to Contacted to Closed in one pipeline." },
-  { icon: Send, title: "Reach out with AI", desc: "Generate personalized outreach emails in seconds. Choose tone and language — AI uses each restaurant's real details." },
-];
+/* ═══════════════════════ MORE FEATURES — BENTO GRID ═══════════════════════ */
 
-function HowItWorks() {
+/* Skeleton: Activity timeline rows that shift on hover */
+function SkeletonActivity() {
+  const rows = [
+    { label: "Called Mario's Bistro", time: "2m ago", color: "#2563eb" },
+    { label: "Email sent to La Piazza", time: "14m ago", color: "#0ea5e9" },
+    // { label: "Note added — follow up Fri", time: "1h ago", color: "#8b5cf6" },
+    // { label: "Meeting with Sakura Sushi", time: "3h ago", color: "#f59e0b" },
+  ];
+  const shift = { initial: { x: 0 }, animate: { x: 5, transition: { duration: 0.2 } } };
+  const shiftAlt = { initial: { x: 0 }, animate: { x: -5, transition: { duration: 0.2 } } };
+
   return (
-    <section id="how-it-works" className="py-20 md:py-28" style={{ background: C.light }}>
-      <div className="max-w-7xl mx-auto px-6">
-        <FadeIn className="text-center mb-16">
-          <span className="text-xs font-bold tracking-widest uppercase mb-3 block" style={{ color: C.sky }}>How It Works</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4" style={{ color: C.dark }}>
-            From zero to pipeline in four steps
-          </h2>
-          <p className="text-base max-w-xl mx-auto" style={{ color: C.muted }}>
-            No complicated setup. No expensive tools. Start scraping restaurant data in minutes.
-          </p>
-        </FadeIn>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {steps.map((s, i) => (
-            <FadeIn key={s.title} delay={i * 0.1}>
-              <div className="relative p-6 rounded-xl text-center" style={{ background: C.white, border: `1px solid ${C.border}` }}>
-                {/* Step number */}
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: C.skyMid }}>
-                  Step {i + 1}
-                </span>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mt-4 mb-5" style={{ background: `${C.sky}10` }}>
-                  <s.icon size={24} style={{ color: C.sky }} />
-                </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: C.dark }}>{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: C.muted }}>{s.desc}</p>
-              </div>
-            </FadeIn>
-          ))}
-        </div>
-      </div>
-    </section>
+    <motion.div initial="initial" whileHover="animate" className="flex flex-1 w-full h-full min-h-[6rem] flex-col gap-2">
+      {rows.map((r, i) => (
+        <motion.div
+          key={r.label}
+          variants={i % 2 === 0 ? shift : shiftAlt}
+          className="flex items-center gap-2.5 rounded-lg border px-3 py-2"
+          style={{ borderColor: C.border, background: C.white }}
+        >
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: r.color }} />
+          <span className="flex-1 text-xs font-medium truncate" style={{ color: C.dark }}>{r.label}</span>
+          <span className="text-[10px] shrink-0" style={{ color: C.muted }}>{r.time}</span>
+        </motion.div>
+      ))}
+    </motion.div>
   );
 }
 
-/* ═══════════════════════ MORE FEATURES (cards) ═══════════════════════ */
-const moreFeatures = [
-  { icon: Activity, title: "Activity & Notes Tracking", desc: "Log every call, email, meeting and follow-up. Add notes to any lead. Full interaction history." },
-  { icon: BarChart3, title: "Real-Time Dashboard", desc: "Total leads, conversion rates, average ratings and recent activity at a glance. Auto-refreshing stats." },
-  { icon: Globe, title: "Worldwide Coverage", desc: "Scrape restaurants from any city in the world. Powered by OpenStreetMap — no geographical restrictions." },
+/* Skeleton: Animated bar chart */
+function SkeletonDashboard() {
+  const bars = [65, 40, 85, 55, 90, 45, 70];
+  return (
+    <motion.div
+      initial="initial"
+      whileHover="hover"
+      className="flex flex-1 w-full h-full min-h-[6rem] items-end gap-1.5 px-2 pb-2"
+    >
+      {bars.map((h, i) => (
+        <motion.div
+          key={i}
+          className="flex-1 rounded-t-sm"
+          style={{ background: i === 4 ? C.sky : `${C.sky}30`, height: `${h}%` }}
+          variants={{
+            initial: { scaleY: 0.3, opacity: 0.5 },
+            hover: { scaleY: 1, opacity: 1, transition: { duration: 0.3, delay: i * 0.04 } },
+          }}
+        />
+      ))}
+    </motion.div>
+  );
+}
+
+/* Skeleton: World map with location pin markers */
+function SkeletonGlobe() {
+  return (
+    <div className="flex flex-1 w-full h-full min-h-[6rem] overflow-hidden rounded-lg">
+      <WorldMap
+        lineColor={C.sky}
+        showLines={false}
+        pins={[
+          { lat: 40.7128, lng: -74.006 },    // New York
+          { lat: 34.0522, lng: -118.2437 },   // Los Angeles
+          { lat: 19.4326, lng: -99.1332 },    // Mexico City
+          { lat: -22.9068, lng: -43.1729 },   // Rio de Janeiro
+          { lat: 51.5074, lng: -0.1278 },     // London
+          { lat: 48.8566, lng: 2.3522 },      // Paris
+          { lat: 41.9028, lng: 12.4964 },     // Rome
+          { lat: 55.7558, lng: 37.6173 },     // Moscow
+          { lat: 25.2048, lng: 55.2708 },     // Dubai
+          { lat: 35.6762, lng: 139.6503 },    // Tokyo
+          { lat: 1.3521, lng: 103.8198 },     // Singapore
+          { lat: -33.8688, lng: 151.2093 },   // Sydney
+          { lat: -1.2921, lng: 36.8219 },     // Nairobi
+          { lat: 13.7563, lng: 100.5018 },    // Bangkok
+        ]}
+      />
+    </div>
+  );
+}
+
+const bentoItems = [
+  {
+    icon: <Globe className="h-4 w-4" style={{ color: C.sky }} />,
+    title: "Worldwide Coverage",
+    description: "Scrape restaurants from any city in the world. Powered by OpenStreetMap — no geographical restrictions.",
+    header: <SkeletonGlobe />,
+    className: "md:col-span-2 md:row-span-2",
+  },
+  {
+    icon: <Activity className="h-4 w-4" style={{ color: C.sky }} />,
+    title: "Activity & Notes Tracking",
+    description: "Log every call, email, meeting and follow-up. Full interaction history at your fingertips.",
+    header: <SkeletonActivity />,
+    className: "md:col-span-1",
+  },
+  {
+    icon: <BarChart3 className="h-4 w-4" style={{ color: C.sky }} />,
+    title: "Real-Time Dashboard",
+    description: "Total leads, conversion rates, average ratings and recent activity at a glance.",
+    header: <SkeletonDashboard />,
+    className: "md:col-span-1",
+  },
 ];
 
 function MoreFeatures() {
   return (
     <section className="py-20 md:py-28" style={{ background: C.white }}>
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-3 gap-8">
-          {moreFeatures.map((f, i) => (
-            <FadeIn key={f.title} delay={i * 0.1}>
-              <div className="p-8 rounded-xl transition-shadow hover:shadow-lg" style={{ border: `1px solid ${C.border}` }}>
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: `${C.sky}10` }}>
-                  <f.icon size={22} style={{ color: C.sky }} />
-                </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: C.dark }}>{f.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: C.muted }}>{f.desc}</p>
-              </div>
+        <FadeIn className="text-center mb-16">
+          <span className="text-xs font-bold tracking-widest uppercase mb-3 block" style={{ color: C.sky }}>Capabilities</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4" style={{ color: C.dark }}>
+            Powerful tools, zero complexity
+          </h2>
+          <p className="text-base max-w-xl mx-auto" style={{ color: C.muted }}>
+            Everything you need to track, analyze, and reach your restaurant leads — all in one place.
+          </p>
+        </FadeIn>
+
+        <BentoGrid className="max-w-5xl mx-auto md:auto-rows-[14rem]">
+          {bentoItems.map((item, i) => (
+            <FadeIn key={item.title} delay={i * 0.12} className={item.className}>
+              <BentoGridItem
+                title={item.title}
+                description={item.description}
+                header={item.header}
+                icon={item.icon}
+                className="h-full"
+              />
             </FadeIn>
           ))}
-        </div>
+        </BentoGrid>
       </div>
     </section>
   );
@@ -656,7 +725,7 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <FeaturesSection />
-      <HowItWorks />
+      <HowItWorksB />
       <MoreFeatures />
       <StatsBar />
       <CtaSection />
