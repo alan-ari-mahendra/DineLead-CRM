@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView } from "motion/react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
   Search,
   LayoutDashboard,
@@ -66,9 +67,9 @@ function Navbar() {
       }}
     >
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-1.5 font-bold text-xl" style={{ color: C.dark }}>
-          <Globe size={22} style={{ color: C.sky }} />
-          <span>Dine<span style={{ color: C.sky }}>Lead</span></span>
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl" style={{ color: C.dark }}>
+          <Image src="/site-logo-DL-removebg-preview.png" alt="DineLead" width={100} height={100} className="rounded-md" />
+          {/* <span>Dine<span style={{ color: C.sky }}>Lead</span></span> */}
         </Link>
 
         {/* desktop */}
@@ -603,10 +604,14 @@ function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-1.5 font-bold text-lg text-white mb-3">
+            {/* <div className="flex items-center gap-1.5 font-bold text-lg text-white mb-3">
               <Globe size={18} style={{ color: C.sky }} />
               Dine<span style={{ color: C.sky }}>Lead</span>
-            </div>
+            </div> */}
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl" style={{ color: C.dark }}>
+              <Image src="/site-logo-DL-removebg-preview.png" alt="DineLead" width={100} height={100} className="rounded-md" />
+              {/* <span>Dine<span style={{ color: C.sky }}>Lead</span></span> */}
+            </Link>
             <p className="text-sm leading-relaxed mb-4" style={{ color: "#94a3b8" }}>
               Restaurant CRM & lead scraping platform. From discovery to deal, all in one place.
             </p>

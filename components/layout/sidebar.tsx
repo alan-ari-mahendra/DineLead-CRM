@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Building2, Zap, FileText, Settings, ChevronLeft, ChevronRight } from "lucide-react"
+import Image from "next/image"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -30,9 +31,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!collapsed && (
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
+            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={40} height={40} className="rounded-lg" />
             <span className="font-bold text-gray-900">DineLead</span>
           </div>
         )}
