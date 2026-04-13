@@ -133,7 +133,7 @@ function Hero() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight text-white">
             <span className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 [&>span]:!drop-shadow-none">
               <LayoutTextFlip
-                text="restaurant data and"
+                text="restaurant data"
                 words={["Discover", "Find", "Source", "Collect"]}
                 className="!text-4xl sm:!text-5xl lg:!text-6xl !font-extrabold"
               />
