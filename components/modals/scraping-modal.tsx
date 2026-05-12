@@ -17,7 +17,6 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
-import { getCookies } from "@/app/action";
 
 interface ScrapingModalProps {
   isOpen: boolean;
@@ -42,21 +41,12 @@ export function ScrapingModal({
       return;
     }
     try {
-      const cookieString = await getCookies();
-      const res = await axios.post(
-        "/api/scrape",
-        {
-          userId: user.id,
-          location: location,
-          radius: parseInt(radius) * 1000,
-          category: category,
-        },
-        {
-          headers: {
-            Cookie: cookieString,
-          },
-        }
-      );
+      const res = await axios.post("/api/scrape", {
+        userId: user.id,
+        location: location,
+        radius: parseInt(radius) * 1000,
+        category: category,
+      });
 
       const { jobId } = res.data;
       toast.success(`Job queued: ${jobId}`);
