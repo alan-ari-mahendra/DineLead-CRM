@@ -135,7 +135,11 @@ async function fetchOverpassPlaces({
     OVERPASS_URL,
     `data=${encodeURIComponent(query)}`,
     {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "*/*",
+        "User-Agent": "DineLead/1.0 (portfolio showcase)",
+      },
       timeout: 70_000, // slightly above the 60s Overpass timeout
     }
   );
