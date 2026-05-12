@@ -4,13 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-const scrapeQueue = new Queue("scrape", {
-  connection: {
-    host: process.env.REDIS_HOST || "localhost",
-    port: parseInt(process.env.REDIS_PORT || "6379"),
-    password: process.env.REDIS_PASSWORD || undefined,
-  },
-});
+let _scrapeQueue: Queue | null = null;
+
+function getScrapeQueue(): Queue {
+  if (!_scrapeQueue) {
+    _scrapeQueue = new Queue("scrape", {
+      connection: {
+        host: process.env.REDIS_HOST || "localhost",
+        port: parseInt(process.env.REDIS_PORT || "6379"),
+        password: process.env.REDIS_PASSWORD || undefined,
+      },
+    });
+  }
+  return _scrapeQueue;
+}
 
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
@@ -33,7 +40,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const job = await Job.fromId(scrapeQueue, jobId);
+  const job = await Job.fromId(getScrapeQueue(), jobId);
   return NextResponse.json({
     id: job?.id,
     status: await job?.getState(),
@@ -70,7 +77,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const job = await scrapeQueue.add(
+    const job = await getScrapeQueue().add(
       "search",
       {
         location,
