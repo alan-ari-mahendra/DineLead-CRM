@@ -13,7 +13,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -24,6 +24,7 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +42,13 @@ export function RegisterForm() {
         password: password,
       });
       toast.success("Success to register");
-      router.push("/login");
+
+      const plan = searchParams.get("plan");
+      if (plan) {
+        router.push(`/login?redirect=/settings/billing`);
+      } else {
+        router.push("/login");
+      }
     } catch (error) {
       toast.error("Failed While Register");
     } finally {
@@ -115,7 +122,7 @@ export function RegisterForm() {
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href={searchParams.get("plan") ? `/login?redirect=/settings/billing` : "/login"} className="text-primary hover:underline">
               Sign in
             </Link>
           </p>

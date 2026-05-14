@@ -13,7 +13,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 
 const DEMO_EMAIL = "admin@admin.com";
@@ -24,6 +24,7 @@ export function LoginForm() {
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,9 @@ export function LoginForm() {
       setIsLoading(false);
       return;
     }
-    router.push("/dashboard");
+
+    const redirect = searchParams.get("redirect");
+    router.push(redirect || "/dashboard");
   };
 
   return (
@@ -85,7 +88,7 @@ export function LoginForm() {
           </Button>
           <p className="text-sm text-muted-foreground text-center">
             {"Don't have an account? "}
-            <Link href="/register" className="text-primary hover:underline">
+            <Link href={searchParams.get("redirect") ? `/register?plan=billing` : "/register"} className="text-primary hover:underline">
               Sign up
             </Link>
           </p>

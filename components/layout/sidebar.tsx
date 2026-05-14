@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Building2, Zap, FileText, Settings, ChevronLeft, ChevronRight } from "lucide-react"
+import { LayoutDashboard, Building2, Zap, FileText, Settings, CreditCard, ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Scraping Jobs", href: "/scraping-jobs", icon: Zap },
   { name: "Exports", href: "/export", icon: FileText },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Billing", href: "/settings/billing", icon: CreditCard },
 ]
 
 export function Sidebar() {

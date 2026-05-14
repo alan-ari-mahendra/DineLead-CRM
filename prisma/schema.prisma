@@ -22,11 +22,32 @@ model User {
   password String
   role     String
 
+  // Stripe
+  stripeCustomerId String?       @unique
+  subscription     Subscription?
+
   company      Company[]
   lead         Lead[]
   scrapingJob  ScrapingJob[]
   leadNotes    LeadNotes[]
   leadActivity LeadActivity[]
+}
+
+model Subscription {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  stripeSubscriptionId   String?   @unique
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+
+  plan   String @default("free") // free, pro, enterprise
+  status String @default("active") // active, canceled, past_due
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Company {

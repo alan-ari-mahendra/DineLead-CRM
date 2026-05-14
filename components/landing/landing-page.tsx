@@ -76,7 +76,7 @@ function Navbar() {
 
         {/* desktop */}
         <div className="hidden md:flex items-center gap-8">
-          {["Features", "How It Works"].map((t) => (
+          {["Features", "How It Works", "Pricing"].map((t) => (
             <a key={t} href={`#${t.toLowerCase().replace(/ /g, "-")}`} className="text-sm font-medium hover:opacity-70 transition-opacity" style={{ color: C.muted }}>
               {t}
             </a>
@@ -99,7 +99,7 @@ function Navbar() {
 
       {open && (
         <div className="md:hidden px-6 pb-4 flex flex-col gap-3" style={{ background: C.white, borderTop: `1px solid ${C.border}` }}>
-          {["Features", "How It Works"].map((t) => (
+          {["Features", "How It Works", "Pricing"].map((t) => (
             <a key={t} href={`#${t.toLowerCase().replace(/ /g, "-")}`} onClick={() => setOpen(false)} className="text-sm py-2" style={{ color: C.muted }}>
               {t}
             </a>
@@ -636,6 +636,183 @@ function StatsBar() {
   );
 }
 
+/* ═══════════════════════ PRICING ═══════════════════════ */
+const plans = [
+  {
+    key: "free",
+    name: "Free",
+    description: "For individuals & small side projects",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    popular: false,
+    cta: "Get Started Free",
+    href: "/register",
+    features: [
+      "Up to 3 boards",
+      "Up to 5 team members",
+      "Basic task cards",
+      "Kanban view",
+      "100 MB file storage",
+      "Community support",
+    ],
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    description: "For growing teams that need more power",
+    monthlyPrice: 5,
+    yearlyPrice: 4,
+    popular: true,
+    cta: "Get Started",
+    href: "/register?plan=pro",
+    features: [
+      "Unlimited boards",
+      "Up to 25 team members",
+      "Subtasks & dependencies",
+      "Kanban, list & calendar views",
+      "5 GB file storage",
+      "Basic analytics & reports",
+      "Slack & email integrations",
+      "Priority email support",
+    ],
+  },
+  {
+    key: "enterprise",
+    name: "Enterprise",
+    description: "For organizations that need full control",
+    monthlyPrice: 10,
+    yearlyPrice: 8,
+    popular: false,
+    cta: "Contact Sales",
+    href: "/register?plan=enterprise",
+    features: [
+      "Everything in Pro",
+      "Unlimited team members",
+      "Custom fields & workflows",
+      "Advanced permissions & roles",
+      "SSO & SAML authentication",
+      "50 GB file storage",
+      "Advanced analytics & CSV exports",
+      "API access & webhooks",
+      "Dedicated account manager",
+      "99.9% SLA uptime guarantee",
+    ],
+  },
+];
+
+function PricingSection() {
+  const [yearly, setYearly] = useState(false);
+
+  return (
+    <section id="pricing" className="py-20 md:py-28" style={{ background: C.light }}>
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <FadeIn className="text-center mb-10">
+          <span className="text-xs font-bold tracking-widest uppercase mb-3 block" style={{ color: C.sky }}>Pricing</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4" style={{ color: C.dark }}>
+            Simple, transparent pricing
+          </h2>
+          <p className="text-base max-w-2xl mx-auto" style={{ color: C.muted }}>
+            No hidden fees, no surprises. Pick a plan and get started.
+          </p>
+        </FadeIn>
+
+        {/* Monthly / Yearly toggle */}
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <span className="text-sm font-medium" style={{ color: !yearly ? C.dark : C.muted }}>Monthly</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={yearly}
+            onClick={() => setYearly(!yearly)}
+            className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            style={{ background: yearly ? C.sky : C.border }}
+          >
+            <span
+              className="pointer-events-none block h-5 w-5 rounded-full shadow-sm ring-0 transition-transform"
+              style={{ background: C.white, transform: yearly ? "translateX(1.25rem)" : "translateX(0)" }}
+            />
+          </button>
+          <span className="text-sm font-medium" style={{ color: yearly ? C.dark : C.muted }}>Yearly</span>
+          {yearly && (
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#dcfce7", color: "#16a34a" }}>
+              Save 20%
+            </span>
+          )}
+        </div>
+
+        {/* Pricing cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+          {plans.map((plan) => {
+            const price = yearly ? plan.yearlyPrice : plan.monthlyPrice;
+            return (
+              <FadeIn key={plan.key} delay={0.1}>
+                <div
+                  className="relative flex flex-col h-full rounded-2xl p-6 transition-shadow"
+                  style={{
+                    background: C.white,
+                    border: plan.popular ? `2px solid ${C.sky}` : `1px solid ${C.border}`,
+                    boxShadow: plan.popular ? `0 8px 30px ${C.sky}15` : "0 1px 3px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: C.sky }}>
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mb-4">
+                    <h3 className="text-lg font-bold" style={{ color: C.dark }}>{plan.name}</h3>
+                    <p className="text-sm" style={{ color: C.muted }}>{plan.description}</p>
+                  </div>
+
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-4xl font-extrabold" style={{ color: C.dark }}>${price}</span>
+                    {price > 0 && <span className="text-sm" style={{ color: C.muted }}>/month</span>}
+                  </div>
+                  {yearly && price > 0 && (
+                    <p className="text-xs mb-4" style={{ color: C.muted }}>Billed ${price * 12}/year</p>
+                  )}
+                  {!yearly && price > 0 && (
+                    <p className="text-xs mb-4" style={{ color: C.muted }}>or ${plan.yearlyPrice * 12}/year</p>
+                  )}
+                  {price === 0 && <div className="mb-4" />}
+
+                  <div className="h-px mb-4" style={{ background: C.border }} />
+
+                  <ul className="space-y-3 flex-1 mb-6">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-2.5">
+                        <Check size={16} className="mt-0.5 shrink-0" style={{ color: C.sky }} />
+                        <span className="text-sm" style={{ color: C.muted }}>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    href={plan.href}
+                    className="block w-full text-center py-2.5 rounded-lg text-sm font-semibold transition-all hover:brightness-110"
+                    style={{
+                      background: plan.popular ? C.skyMid : "transparent",
+                      color: plan.popular ? C.white : C.text,
+                      border: plan.popular ? "none" : `1px solid ${C.border}`,
+                    }}
+                  >
+                    {plan.cta}
+                    {" →"}
+                  </Link>
+                </div>
+              </FadeIn>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════════════ CTA ═══════════════════════ */
 function CtaSection() {
   return (
@@ -647,7 +824,7 @@ function CtaSection() {
             Start building your restaurant pipeline today
           </h2>
           <p className="text-lg mb-10" style={{ color: "rgba(255,255,255,0.75)" }}>
-            No credit card required. No API keys needed. Free to start.
+            No API keys needed. Pick a plan and start scraping today.
           </p>
           <Link href="/register" className="inline-flex items-center gap-2 font-semibold px-8 py-4 rounded-lg text-base transition-all hover:brightness-110" style={{ background: C.white, color: C.skyMid }}>
             Get Started Free
@@ -662,7 +839,7 @@ function CtaSection() {
 /* ═══════════════════════ FOOTER ═══════════════════════ */
 function Footer() {
   const columns = [
-    { title: "Product", links: [{ label: "Features", href: "#features" }, { label: "How It Works", href: "#how-it-works" }, { label: "Dashboard", href: "/login" }] },
+    { title: "Product", links: [{ label: "Features", href: "#features" }, { label: "How It Works", href: "#how-it-works" }, { label: "Pricing", href: "#pricing" }, { label: "Dashboard", href: "/login" }] },
     { title: "Resources", links: [{ label: "Documentation", href: "#" }, { label: "API Reference", href: "#" }, { label: "Changelog", href: "#" }] },
     { title: "Company", links: [{ label: "About", href: "#" }, { label: "Contact", href: "#" }, { label: "GitHub", href: "#" }] },
   ];
@@ -728,6 +905,7 @@ export default function LandingPage() {
       <HowItWorksB />
       <MoreFeatures />
       <StatsBar />
+      <PricingSection />
       <CtaSection />
       <Footer />
     </div>
