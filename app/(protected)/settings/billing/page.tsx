@@ -37,14 +37,33 @@ function BillingContent() {
 
   useEffect(() => {
     const success = searchParams.get("success");
+    const sessionId = searchParams.get("session_id");
     const canceled = searchParams.get("canceled");
 
-    if (success) {
-      toast.success(
-        "Payment successful! Your subscription has been activated."
-      );
-      update();
-      window.history.replaceState({}, "", "/settings/billing");
+    if (success && sessionId) {
+      // Verify checkout and save subscription to DB
+      fetch("/api/stripe/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            toast.success(
+              "Payment successful! Your subscription has been activated."
+            );
+            update(); // refresh NextAuth session
+          } else {
+            toast.error(data.error || "Failed to verify payment");
+          }
+        })
+        .catch(() => {
+          toast.error("Failed to verify payment");
+        })
+        .finally(() => {
+          window.history.replaceState({}, "", "/settings/billing");
+        });
     }
 
     if (canceled) {
