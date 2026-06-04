@@ -56,7 +56,7 @@ export function Sidebar() {
               variant="ghost"
               className={cn(
                 "w-full justify-start h-11 px-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors",
-                isActive && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700",
+                isActive && "bg-emerald-50 text-emerald-800 hover:bg-emerald-50 hover:text-emerald-800 border-l-2 border-emerald-600 rounded-l-none",
                 collapsed && "justify-center px-0",
               )}
               onClick={() => router.push(item.href)}

@@ -39,6 +39,12 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  LayoutGrid,
+  List,
+  Phone,
+  MapPin,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import { RestaurantDetailModal } from "@/components/modals/restaurant-detail-modal";
 import { Restaurant } from "@/types/restaurant.type";
@@ -59,6 +65,19 @@ export default function RestaurantsPage() {
   const [selectedRestaurants, setSelectedRestaurants] = useState<string[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("restaurants-view-mode");
+    if (saved === "grid" || saved === "table") {
+      setViewMode(saved);
+    }
+  }, []);
+
+  const handleToggleViewMode = (mode: "table" | "grid") => {
+    setViewMode(mode);
+    localStorage.setItem("restaurants-view-mode", mode);
+  };
 
   useEffect(() => {
     fetchFilteredData(filters, 1);
@@ -158,7 +177,7 @@ export default function RestaurantsPage() {
   const hasActiveFilters = filters.search || filters.status !== "all" || filters.rating !== "all" || filters.industry !== "all";
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-muted">
       {/* Top Bar */}
       <div className="border-b border-gray-100 bg-white sticky top-0 z-10">
         <div className="px-4 md:px-6 lg:px-8 py-4">
@@ -166,7 +185,7 @@ export default function RestaurantsPage() {
             <div className="flex items-center gap-3">
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">Restaurants</h1>
-                <p className="text-sm text-gray-400">{metaPagination.total} total leads</p>
+                <p className="text-sm text-gray-450 mt-0.5">{metaPagination.total} total leads</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -176,6 +195,29 @@ export default function RestaurantsPage() {
                   Export {selectedRestaurants.length}
                 </Button>
               )}
+
+              {/* View Switcher */}
+              <div className="flex items-center border border-gray-200 rounded-lg p-0.5 bg-gray-50/50 mr-1 shrink-0">
+                <Button
+                  variant={viewMode === "table" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleToggleViewMode("table")}
+                  className={`h-7 px-2.5 text-xs ${viewMode === "table" ? "bg-white shadow-sm text-emerald-800 font-semibold" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  <List className="h-3.5 w-3.5 mr-1" />
+                  Table
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleToggleViewMode("grid")}
+                  className={`h-7 px-2.5 text-xs ${viewMode === "grid" ? "bg-white shadow-sm text-emerald-800 font-semibold" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5 mr-1" />
+                  Bento Grid
+                </Button>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -243,133 +285,294 @@ export default function RestaurantsPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Content Area */}
       <div className="px-4 md:px-6 lg:px-8 py-4">
-        <div className="rounded-xl border border-gray-100 overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                <TableHead className="w-10 pl-4">
-                  <Checkbox
-                    checked={selectedRestaurants.length === restaurants.length && restaurants.length > 0}
-                    onCheckedChange={handleSelectAll}
-                    disabled={isLoading}
-                  />
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Address</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Phone</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="pl-4"><div className="w-4 h-4 rounded bg-gray-100 animate-pulse" /></TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
-                        <div><div className="h-3.5 bg-gray-100 rounded w-32 mb-1 animate-pulse" /><div className="h-3 bg-gray-100 rounded w-20 animate-pulse" /></div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell"><div className="h-3 bg-gray-100 rounded w-40 animate-pulse" /></TableCell>
-                    <TableCell className="hidden lg:table-cell"><div className="h-3 bg-gray-100 rounded w-24 animate-pulse" /></TableCell>
-                    <TableCell><div className="h-3 bg-gray-100 rounded w-12 animate-pulse" /></TableCell>
-                    <TableCell><div className="h-5 bg-gray-100 rounded w-16 animate-pulse" /></TableCell>
-                    <TableCell><div className="h-6 bg-gray-100 rounded w-6 animate-pulse" /></TableCell>
-                  </TableRow>
-                ))
-              ) : restaurants.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-16">
-                    <Building2 className="h-10 w-10 mx-auto mb-2 text-gray-200" />
-                    <p className="text-sm text-gray-500">No restaurants found</p>
-                    <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
-                  </TableCell>
+        {viewMode === "table" ? (
+          <div className="rounded-xl border border-gray-100 overflow-hidden bg-white">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                  <TableHead className="w-10 pl-4">
+                    <Checkbox
+                      checked={selectedRestaurants.length === restaurants.length && restaurants.length > 0}
+                      onCheckedChange={handleSelectAll}
+                      disabled={isLoading}
+                    />
+                  </TableHead>
+                  <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Name</TableHead>
+                  <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Address</TableHead>
+                  <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Phone</TableHead>
+                  <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</TableHead>
+                  <TableHead className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
-              ) : (
-                restaurants.map((r) => (
-                  <TableRow
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="pl-4"><div className="w-4 h-4 rounded bg-gray-100 animate-pulse" /></TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 animate-pulse" />
+                          <div><div className="h-3.5 bg-gray-100 rounded w-32 mb-1 animate-pulse" /><div className="h-3 bg-gray-100 rounded w-20 animate-pulse" /></div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell"><div className="h-3 bg-gray-100 rounded w-40 animate-pulse" /></TableCell>
+                      <TableCell className="hidden lg:table-cell"><div className="h-3 bg-gray-100 rounded w-24 animate-pulse" /></TableCell>
+                      <TableCell><div className="h-3 bg-gray-100 rounded w-12 animate-pulse" /></TableCell>
+                      <TableCell><div className="h-5 bg-gray-100 rounded w-16 animate-pulse" /></TableCell>
+                      <TableCell><div className="h-6 bg-gray-100 rounded w-6 animate-pulse" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : restaurants.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-16">
+                      <Building2 className="h-10 w-10 mx-auto mb-2 text-gray-200" />
+                      <p className="text-sm text-gray-500">No restaurants found</p>
+                      <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  restaurants.map((r) => (
+                    <TableRow
+                      key={r.id}
+                      className={`group cursor-pointer transition-colors ${
+                        selectedRestaurants.includes(r.id) ? "bg-emerald-50/20" : "hover:bg-gray-50/50"
+                      }`}
+                      onClick={() => { setSelectedRestaurant(r); setIsDetailModalOpen(true); }}
+                    >
+                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedRestaurants.includes(r.id)}
+                          onCheckedChange={(checked) => handleSelectRestaurant(r.id, checked as boolean)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-xs font-semibold text-gray-600">
+                            {r.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
+                              {r.name}
+                            </p>
+                            {r.company?.name && (
+                              <p className="text-xs text-gray-400 truncate">{r.company.name}</p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <p className="text-sm text-gray-500 truncate max-w-[250px]">{r.address}</p>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <p className="text-sm text-gray-500 tabular-nums">{r.phone}</p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                          <span className="text-sm font-medium text-gray-900 tabular-nums">{r.rating}</span>
+                          <span className="text-xs text-gray-400">({r.reviewCount})</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(r.leadStatus.name)}`} />
+                          <span className="text-xs font-medium text-gray-600">{r.leadStatus.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => { setSelectedRestaurant(r); setIsDetailModalOpen(true); }}>
+                              <Eye className="h-4 w-4 mr-2" /> View Detail
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "contacted")}>
+                              <Edit className="h-4 w-4 mr-2" /> Mark Contacted
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "closed")}>
+                              <Edit className="h-4 w-4 mr-2" /> Mark Closed
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          /* Bento Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 space-y-4 animate-pulse">
+                  <div className="flex justify-between items-start">
+                    <div className="w-8 h-8 rounded-full bg-gray-100" />
+                    <div className="h-5 bg-gray-100 rounded w-20" />
+                  </div>
+                  <div className="h-4 bg-gray-100 rounded w-2/3" />
+                  <div className="space-y-2">
+                    <div className="h-3.5 bg-gray-100 rounded w-full" />
+                    <div className="h-3.5 bg-gray-100 rounded w-5/6" />
+                  </div>
+                  <div className="h-8 bg-gray-100 rounded w-24 pt-4" />
+                </div>
+              ))
+            ) : restaurants.length === 0 ? (
+              <div className="col-span-full text-center py-16 bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                <Building2 className="h-10 w-10 mx-auto mb-2 text-gray-200" />
+                <p className="text-sm text-gray-500">No restaurants found</p>
+                <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+              </div>
+            ) : (
+              restaurants.map((r, index) => {
+                const isFeatured = r.rating >= 4.5 || index % 5 === 0;
+                return (
+                  <div
                     key={r.id}
-                    className={`group cursor-pointer transition-colors ${
-                      selectedRestaurants.includes(r.id) ? "bg-blue-50/50" : "hover:bg-gray-50/50"
-                    }`}
+                    className={`group cursor-pointer bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-0.5 transition-all flex flex-col justify-between p-6 md:p-8 ${
+                      isFeatured ? "md:col-span-2" : "col-span-1"
+                    } ${selectedRestaurants.includes(r.id) ? "ring-2 ring-emerald-600/30 bg-emerald-50/10" : ""}`}
                     onClick={() => { setSelectedRestaurant(r); setIsDetailModalOpen(true); }}
                   >
-                    <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
-                      <Checkbox
-                        checked={selectedRestaurants.includes(r.id)}
-                        onCheckedChange={(checked) => handleSelectRestaurant(r.id, checked as boolean)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-xs font-semibold text-gray-600">
-                          {r.name.charAt(0).toUpperCase()}
+                    <div>
+                      {/* Top Header Row of the Card */}
+                      <div className="flex items-center justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedRestaurants.includes(r.id)}
+                            onCheckedChange={(checked) => handleSelectRestaurant(r.id, checked as boolean)}
+                          />
+                          <div className="flex items-center gap-1.5 ml-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(r.leadStatus.name)}`} />
+                            <span className="text-xs font-medium text-gray-500">{r.leadStatus.name}</span>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                            {r.name}
-                          </p>
-                          {r.company?.name && (
-                            <p className="text-xs text-gray-400 truncate">{r.company.name}</p>
+
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-75 hover:opacity-100">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem onClick={() => { setSelectedRestaurant(r); setIsDetailModalOpen(true); }}>
+                                <Eye className="h-4 w-4 mr-2" /> View Detail
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "contacted")}>
+                                <Edit className="h-4 w-4 mr-2" /> Mark Contacted
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "closed")}>
+                                <Edit className="h-4 w-4 mr-2" /> Mark Closed
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      {/* Title & Company */}
+                      <div className="mb-4">
+                        <h3 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700 transition-colors line-clamp-1">
+                          {r.name}
+                        </h3>
+                        {r.company?.name && (
+                          <p className="text-xs text-gray-400 font-medium truncate mt-0.5">{r.company.name}</p>
+                        )}
+                      </div>
+
+                      {/* Card Content Columns */}
+                      <div className={`grid gap-4 ${isFeatured ? "grid-cols-2" : "grid-cols-1"} text-sm text-gray-500`}>
+                        <div className="space-y-2.5">
+                          <div className="flex items-start gap-2">
+                            <MapPin className="h-4 w-4 text-gray-400 mt-0.5 shrink-0" />
+                            <span className="line-clamp-2 text-xs">{r.address}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-gray-400 shrink-0" />
+                            <span className="tabular-nums text-xs">{r.phone || "-"}</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-amber-400 fill-amber-400 shrink-0" />
+                            <span className="font-semibold text-gray-900 text-xs tabular-nums">{r.rating}</span>
+                            <span className="text-[11px] text-gray-400">({r.reviewCount} reviews)</span>
+                          </div>
+                          {isFeatured && r.company?.website && r.company.website !== "-" && (
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Globe className="h-4 w-4 text-gray-400 shrink-0" />
+                              <a
+                                href={r.company.website.startsWith("http") ? r.company.website : `https://${r.company.website}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-emerald-600 hover:underline truncate flex items-center gap-1"
+                              >
+                                {r.company.website}
+                                <ExternalLink className="h-3 w-3 shrink-0" />
+                              </a>
+                            </div>
                           )}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <p className="text-sm text-gray-500 truncate max-w-[250px]">{r.address}</p>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      <p className="text-sm text-gray-500 tabular-nums">{r.phone}</p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                        <span className="text-sm font-medium text-gray-900 tabular-nums">{r.rating}</span>
-                        <span className="text-xs text-gray-400">({r.reviewCount})</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(r.leadStatus.name)}`} />
-                        <span className="text-xs font-medium text-gray-600">{r.leadStatus.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="flex items-center justify-between gap-2 mt-6 pt-4 border-t border-gray-55">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 h-8 animate-all"
+                        onClick={(e) => { e.stopPropagation(); setSelectedRestaurant(r); setIsDetailModalOpen(true); }}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        View Lead
+                      </Button>
+
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        {r.leadStatus.name.toLowerCase() !== "contacted" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[11px] font-medium border-gray-200 hover:bg-gray-50 bg-white"
+                            onClick={() => handleStatusUpdate(r.id, "contacted")}
+                          >
+                            Contacted
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                          <DropdownMenuItem onClick={() => { setSelectedRestaurant(r); setIsDetailModalOpen(true); }}>
-                            <Eye className="h-4 w-4 mr-2" /> View Detail
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "contacted")}>
-                            <Edit className="h-4 w-4 mr-2" /> Mark Contacted
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleStatusUpdate(r.id, "closed")}>
-                            <Edit className="h-4 w-4 mr-2" /> Mark Closed
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                        )}
+                        {r.leadStatus.name.toLowerCase() !== "closed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[11px] font-medium bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-800"
+                            onClick={() => handleStatusUpdate(r.id, "closed")}
+                          >
+                            Close
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
 
         {/* Pagination */}
         {metaPagination.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 px-1">
+          <div className="flex items-center justify-between mt-6 px-1">
             <p className="text-xs text-gray-400">
               Page {metaPagination.page} of {metaPagination.totalPages} · {metaPagination.total} results
             </p>
@@ -379,7 +582,7 @@ export default function RestaurantsPage() {
                 size="sm"
                 onClick={() => handlePageChange(metaPagination.page - 1)}
                 disabled={!metaPagination.hasPrevPage}
-                className="h-7 w-7 p-0 border-gray-200"
+                className="h-7 w-7 p-0 border-gray-200 bg-white"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
@@ -397,10 +600,10 @@ export default function RestaurantsPage() {
                 return (
                   <Button
                     key={page}
-                    variant={page === metaPagination.page ? "default" : "ghost"}
+                    variant={page === metaPagination.page ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePageChange(page)}
-                    className={`h-7 w-7 p-0 text-xs ${page === metaPagination.page ? "bg-gray-900 text-white" : "text-gray-500"}`}
+                    className={`h-7 w-7 p-0 text-xs ${page === metaPagination.page ? "bg-emerald-600 text-white hover:bg-emerald-700" : "text-gray-500 bg-white"}`}
                   >
                     {page}
                   </Button>
@@ -411,7 +614,7 @@ export default function RestaurantsPage() {
                 size="sm"
                 onClick={() => handlePageChange(metaPagination.page + 1)}
                 disabled={!metaPagination.hasNextPage}
-                className="h-7 w-7 p-0 border-gray-200"
+                className="h-7 w-7 p-0 border-gray-200 bg-white"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </Button>

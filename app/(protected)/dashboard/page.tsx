@@ -65,14 +65,14 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { key: "totalRestaurants" as const, label: "Total Restaurants", icon: Building2, bg: "bg-blue-600" },
-    { key: "prospects" as const, label: "Prospects", icon: Target, bg: "bg-violet-600" },
-    { key: "contacted" as const, label: "Contacted", icon: Phone, bg: "bg-orange-500" },
-    { key: "closed" as const, label: "Closed Deals", icon: CheckCircle, bg: "bg-emerald-600" },
+    { key: "totalRestaurants" as const, label: "Total Restaurants", icon: Building2, bg: "bg-blue-900" },
+    { key: "prospects" as const, label: "Prospects", icon: Target, bg: "bg-emerald-600" },
+    { key: "contacted" as const, label: "Contacted", icon: Phone, bg: "bg-amber-600" },
+    { key: "closed" as const, label: "Closed Deals", icon: CheckCircle, bg: "bg-emerald-700" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-muted p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
           <Button
             onClick={() => setIsScrapingModalOpen(true)}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm font-semibold"
           >
             <Plus className="h-4 w-4 mr-1.5" />
             Scrape Data
@@ -125,7 +125,7 @@ export default function DashboardPage() {
           return (
             <div
               key={stat.key}
-              className="group relative p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-200 transition-all hover:shadow-sm"
+              className="group relative p-6 rounded-xl border-0 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-200"
             >
               <div className="flex items-center gap-2 mb-3">
                 <div className={`w-1.5 h-1.5 rounded-full ${stat.bg}`} />
@@ -162,7 +162,7 @@ export default function DashboardPage() {
         {/* Summary + Quick Actions - spans 1 col */}
         <div className="space-y-4">
           {/* Conversion Rate */}
-          <Card className="border-0 shadow-sm bg-white overflow-hidden">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden transition-all duration-200">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-500">Conversion Rate</p>
@@ -190,7 +190,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Avg Rating */}
-          <Card className="border-0 shadow-sm bg-white">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white transition-all duration-200">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-500">Average Rating</p>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Total Leads */}
-          <Card className="border-0 shadow-sm bg-white">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white transition-all duration-200">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-medium text-gray-500">Total Leads</p>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card className="border-0 shadow-sm bg-white">
+          <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white transition-all duration-200">
             <CardContent className="p-5">
               <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
               <div className="grid grid-cols-2 gap-2">
@@ -264,14 +264,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Leads - spans 1 col */}
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white transition-all duration-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-500">Recent Leads</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-blue-600 hover:text-blue-700 h-auto p-0"
+                className="text-xs text-emerald-600 hover:text-emerald-700 h-auto p-0"
                 onClick={() => router.push("/restaurants")}
               >
                 View all
@@ -299,13 +299,13 @@ export default function DashboardPage() {
                     key={lead.id}
                     className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-blue-900 flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-xs font-bold">
                         {lead.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
                         {lead.name}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
@@ -333,7 +333,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activities - spans 1 col */}
-        <Card className="border-0 shadow-sm bg-white">
+        <Card className="border-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white transition-all duration-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-gray-500">Activity Feed</CardTitle>
