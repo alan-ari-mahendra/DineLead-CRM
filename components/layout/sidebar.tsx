@@ -24,49 +24,81 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        "flex flex-col h-screen bg-white border-r border-gray-100 transition-all duration-300",
+        collapsed ? "w-16" : "w-60",
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        {!collapsed && (
-          <div className="flex items-center space-x-2">
-            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={40} height={40} className="rounded-lg" />
-            <span className="font-bold text-gray-900">DineLead</span>
-          </div>
+      <div className={cn("flex items-center border-b border-gray-100 py-4 transition-all duration-300", collapsed ? "px-3 justify-center" : "px-4 justify-between")}>
+        {collapsed ? (
+          <button 
+            onClick={() => setCollapsed(false)}
+            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          >
+            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={64} height={64} />
+          </button>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2.5">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={64} height={64} />
+              </div>
+              <div>
+                <span className="font-bold text-gray-900 text-sm tracking-tight">DineLead</span>
+                <p className="text-[10px] text-emerald-700 font-semibold leading-none mt-0.5 uppercase tracking-wider">CRM</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCollapsed(true)}
+              className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600 ml-auto shrink-0"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+          </>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 p-0 hover:bg-gray-100"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 px-3 py-3 space-y-0.5">
+        {!collapsed && (
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest px-2 mb-2">Menu</p>
+        )}
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
-            <Button
+            <button
               key={item.name}
-              variant="ghost"
+              onClick={() => router.push(item.href)}
               className={cn(
-                "w-full justify-start h-11 px-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors",
-                isActive && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700",
+                "w-full flex items-center h-9 px-2.5 rounded-lg text-sm font-medium transition-all duration-150 group relative",
+                isActive
+                  ? "bg-emerald-50 text-emerald-800"
+                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-50",
                 collapsed && "justify-center px-0",
               )}
-              onClick={() => router.push(item.href)}
             >
-              <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
-              {!collapsed && <span className="font-medium">{item.name}</span>}
-            </Button>
+              {isActive && !collapsed && (
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-emerald-600 rounded-r-full" />
+              )}
+              <item.icon className={cn(
+                "h-4 w-4 flex-shrink-0 transition-colors",
+                isActive ? "text-emerald-700" : "text-gray-400 group-hover:text-gray-600",
+                !collapsed && "mr-2.5"
+              )} />
+              {!collapsed && <span>{item.name}</span>}
+            </button>
           )
         })}
       </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="px-4 py-3 border-t border-gray-100">
+          <p className="text-[10px] text-gray-400">© 2025 DineLead</p>
+        </div>
+      )}
     </div>
   )
 }

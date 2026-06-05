@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -149,163 +151,177 @@ export default function ExportPage() {
     setSelectedFields(checked ? [...selectedFields, fieldId] : selectedFields.filter((id) => id !== fieldId));
   };
 
-  const getStatusDot = (s: string) => {
-    switch (s.toLowerCase()) {
-      case "prospect": return "bg-blue-500";
-      case "contacted": return "bg-amber-500";
-      case "closed": return "bg-emerald-500";
-      default: return "bg-gray-500";
+  const getStatusBadge = (status?: string) => {
+    switch (status?.toLowerCase()) {
+      case "prospect":
+        return "bg-sky-50 text-sky-700 border-sky-100 hover:bg-sky-50";
+      case "contacted":
+        return "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-50";
+      case "closed":
+        return "bg-emerald-50 text-emerald-800 border-emerald-100 hover:bg-emerald-50";
+      default:
+        return "bg-gray-50 text-gray-600 border-gray-100 hover:bg-gray-50";
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Sticky Header */}
-      <div className="border-b border-gray-100 bg-white sticky top-0 z-10">
-        <div className="px-4 md:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Export Data</h1>
-              <p className="text-sm text-gray-600">
-                Configure and export your restaurant data in various formats with
-                advanced filtering options.
-              </p>
-            </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {(["csv", "excel", "json"] as const).map((format) => {
-                const icons = { csv: FileText, excel: FileSpreadsheet, json: Database };
-                const Icon = icons[format];
-                return (
-                  <Button
-                    key={format}
-                    onClick={() => handleExport(format)}
-                    disabled={isExporting || totalRecords === 0}
-                    size="sm"
-                    className={format === "excel"
-                      ? "h-8 text-xs bg-gray-900 hover:bg-gray-800 text-white"
-                      : "h-8 text-xs"
-                    }
-                    variant={format === "excel" ? "default" : "outline"}
-                  >
-                    {isExporting && exportFormat === format ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                    ) : (
-                      <Icon className="h-3.5 w-3.5 mr-1" />
-                    )}
-                    {format.toUpperCase()}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Inline Filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-200"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="prospect">Prospect</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={rating} onValueChange={setRating}>
-              <SelectTrigger className="w-[110px] h-8 text-xs border-gray-200"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Ratings</SelectItem>
-                <SelectItem value="5">5 Stars</SelectItem>
-                <SelectItem value="4">4+ Stars</SelectItem>
-                <SelectItem value="3">3+ Stars</SelectItem>
-                <SelectItem value="2">2+ Stars</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="w-[120px] h-8 text-xs border-gray-200"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                <SelectItem value="jakarta">Jakarta</SelectItem>
-                <SelectItem value="bandung">Bandung</SelectItem>
-                <SelectItem value="surabaya">Surabaya</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="h-8">
-              <DatePickerWithRange date={dateRange} setDate={setDateRange} />
-            </div>
-
-            <button
-              onClick={() => setShowFieldSelector(!showFieldSelector)}
-              className="flex items-center gap-1 h-8 px-3 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              Fields ({selectedFields.length})
-              {showFieldSelector ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-          </div>
-
-          {/* Collapsible Field Selector */}
-          {showFieldSelector && (
-            <div className="mt-3 pt-3 border-t border-gray-50">
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                {AVAILABLE_FIELDS.map((field) => (
-                  <label key={field.id} className="flex items-center gap-1.5 cursor-pointer">
-                    <Checkbox
-                      checked={selectedFields.includes(field.id)}
-                      onCheckedChange={(checked) => handleFieldToggle(field.id, checked as boolean)}
-                      className="h-3.5 w-3.5"
-                    />
-                    <span className="text-xs text-gray-600">{field.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+    <div className="min-h-screen bg-[#F8F9FA] p-5 md:p-6 lg:p-8 flex flex-col gap-6">
+      
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Export Data</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            Configure and export your restaurant data pipeline in various formats with advanced filters.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {(["csv", "excel", "json"] as const).map((format) => {
+            const icons = { csv: FileText, excel: FileSpreadsheet, json: Database };
+            const Icon = icons[format];
+            const isExcel = format === "excel";
+            return (
+              <Button
+                key={format}
+                onClick={() => handleExport(format)}
+                disabled={isExporting || totalRecords === 0}
+                size="sm"
+                className={cn(
+                  "h-8 px-3 text-xs font-semibold shadow-sm transition-all rounded-lg",
+                  isExcel
+                    ? "bg-emerald-700 hover:bg-emerald-800 text-white"
+                    : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
+                )}
+                variant={isExcel ? "default" : "outline"}
+              >
+                {isExporting && exportFormat === format ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <Icon className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {format.toUpperCase()}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="px-4 md:px-6 lg:px-8 py-4">
+      {/* ── Filters & Configuration Card ── */}
+      <div className="bg-white p-5 rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] space-y-4">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-[140px] h-10 text-sm border-gray-200 bg-white rounded-xl"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="prospect">Prospect</SelectItem>
+              <SelectItem value="contacted">Contacted</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={rating} onValueChange={setRating}>
+            <SelectTrigger className="w-[130px] h-10 text-sm border-gray-200 bg-white rounded-xl"><SelectValue placeholder="Rating" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Ratings</SelectItem>
+              <SelectItem value="5">5 Stars</SelectItem>
+              <SelectItem value="4">4+ Stars</SelectItem>
+              <SelectItem value="3">3+ Stars</SelectItem>
+              <SelectItem value="2">2+ Stars</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={location} onValueChange={setLocation}>
+            <SelectTrigger className="w-[150px] h-10 text-sm border-gray-200 bg-white rounded-xl"><SelectValue placeholder="Location" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Locations</SelectItem>
+              <SelectItem value="jakarta">Jakarta</SelectItem>
+              <SelectItem value="bandung">Bandung</SelectItem>
+              <SelectItem value="surabaya">Surabaya</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="h-10">
+            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          </div>
+
+          <Button
+            onClick={() => setShowFieldSelector(!showFieldSelector)}
+            variant="outline"
+            className="flex items-center gap-1.5 h-10 px-4 text-sm border-gray-200 bg-white rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+          >
+            <span>Fields ({selectedFields.length})</span>
+            {showFieldSelector ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+
+          {isLoadingTotal ? (
+            <div className="flex items-center gap-2 text-xs text-gray-400 font-medium ml-auto">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-600" />
+              <span>Calculating...</span>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400 font-semibold ml-auto uppercase tracking-wider bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+              Matches: <span className="text-emerald-700 font-bold">{totalRecords}</span> leads
+            </div>
+          )}
+        </div>
+
+        {/* Collapsible Field Selector */}
+        {showFieldSelector && (
+          <div className="pt-4 border-t border-gray-100">
+            <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+              {AVAILABLE_FIELDS.map((field) => (
+                <label key={field.id} className="flex items-center gap-2 cursor-pointer group select-none">
+                  <Checkbox
+                    checked={selectedFields.includes(field.id)}
+                    onCheckedChange={(checked) => handleFieldToggle(field.id, checked as boolean)}
+                    className="h-4 w-4 border-gray-300 data-[state=checked]:bg-emerald-700 data-[state=checked]:border-emerald-700 rounded"
+                  />
+                  <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{field.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Table Card (Data Preview) ── */}
+      <div className="bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
         {isLoadingPreview ? (
-          <div className="rounded-xl border border-gray-100 overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50/60 hover:bg-gray-50/60 border-b border-gray-100">
+                {selectedFields.map((field) => (
+                  <TableHead key={field} className="font-semibold text-gray-500 text-xs uppercase tracking-wider py-4">
+                    {FIELD_LABELS[field] || field}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i} className="border-b border-gray-50">
                   {selectedFields.map((field) => (
-                    <TableHead key={field} className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {FIELD_LABELS[field] || field}
-                    </TableHead>
+                    <TableCell key={field} className="py-4 px-4">
+                      <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
+                    </TableCell>
                   ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    {selectedFields.map((field) => (
-                      <TableCell key={field}>
-                        <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         ) : !selectedFields.length ? (
-          <div className="text-center py-20">
-            <Download className="h-10 w-10 mx-auto mb-3 text-gray-200" />
-            <p className="text-sm text-gray-500">Select fields to preview export data</p>
+          <div className="text-center py-20 bg-gray-50/10">
+            <Download className="h-12 w-12 mx-auto mb-3 text-gray-200" />
+            <p className="text-base font-semibold text-gray-600">Select fields to preview export data</p>
+            <p className="text-sm text-gray-400 mt-1">Check at least one column field above to show matching rows</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-100 overflow-hidden">
+          <>
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                <TableRow className="bg-gray-50/60 hover:bg-gray-50/60 border-b border-gray-100">
                   {selectedFields.map((field) => (
-                    <TableHead key={field} className="text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    <TableHead key={field} className="font-semibold text-gray-500 text-xs uppercase tracking-wider py-4 whitespace-nowrap">
                       {FIELD_LABELS[field] || field}
                     </TableHead>
                   ))}
@@ -314,33 +330,32 @@ export default function ExportPage() {
               <TableBody>
                 {previewData.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={selectedFields.length} className="text-center py-12">
-                      <Download className="h-8 w-8 mx-auto mb-2 text-gray-200" />
-                      <p className="text-sm text-gray-500">No data found</p>
-                      <p className="text-xs text-gray-400 mt-1">Try adjusting your filters</p>
+                    <TableCell colSpan={selectedFields.length} className="text-center py-20 bg-gray-50/10">
+                      <Download className="h-12 w-12 mx-auto mb-3 text-gray-200" />
+                      <p className="text-base font-semibold text-gray-600">No matching leads found</p>
+                      <p className="text-sm text-gray-400 mt-1">Try adjusting your filters or date range</p>
                     </TableCell>
                   </TableRow>
                 ) : (
                   previewData.map((row, i) => (
-                    <TableRow key={i} className="hover:bg-gray-50/50">
+                    <TableRow key={i} className="hover:bg-gray-50/50 border-b border-gray-50 transition-colors">
                       {selectedFields.map((field) => (
-                        <TableCell key={field} className="text-sm whitespace-nowrap">
+                        <TableCell key={field} className="text-sm py-3.5 whitespace-nowrap">
                           {field === "name" ? (
-                            <span className="font-medium text-gray-900">{row[field]}</span>
+                            <span className="font-semibold text-gray-900">{row[field]}</span>
                           ) : field === "rating" ? (
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5">
                               <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                              <span className="font-medium text-gray-900 tabular-nums">{row[field]}</span>
+                              <span className="font-semibold text-gray-900 tabular-nums">{row[field]}</span>
                             </div>
                           ) : field === "status" ? (
-                            <div className="flex items-center gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${getStatusDot(row[field] || "")}`} />
-                              <span className="text-xs font-medium text-gray-600">{row[field]}</span>
-                            </div>
+                            <Badge className={cn("rounded-full text-[11px] font-medium px-2.5 py-0.5 shadow-none border", getStatusBadge(row[field]))}>
+                              {row[field]}
+                            </Badge>
                           ) : field === "companyIndustry" ? (
                             <span className="text-gray-500 text-xs">{Array.isArray(row[field]) ? row[field].join(", ") : "-"}</span>
                           ) : (
-                            <span className="text-gray-500 truncate max-w-[200px] block" title={row[field]}>
+                            <span className="text-gray-500 truncate max-w-[220px] block" title={row[field]}>
                               {row[field] || "-"}
                             </span>
                           )}
@@ -351,39 +366,63 @@ export default function ExportPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        )}
 
-        {/* Pagination */}
-        {meta.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 px-1">
-            <p className="text-xs text-gray-400">
-              Page {currentPage} of {meta.totalPages} · {meta.total} results
-            </p>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" onClick={() => fetchPreviewData(currentPage - 1)} disabled={currentPage <= 1} className="h-7 w-7 p-0 border-gray-200">
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
-                let p: number;
-                if (meta.totalPages <= 5) p = i + 1;
-                else if (currentPage <= 3) p = i + 1;
-                else if (currentPage >= meta.totalPages - 2) p = meta.totalPages - 4 + i;
-                else p = currentPage - 2 + i;
-                return (
-                  <Button key={p} variant={p === currentPage ? "default" : "ghost"} size="sm" onClick={() => fetchPreviewData(p)}
-                    className={`h-7 w-7 p-0 text-xs ${p === currentPage ? "bg-gray-900 text-white" : "text-gray-500"}`}>
-                    {p}
+            {/* ── Pagination & Summary ── */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/20">
+              <p className="text-xs text-gray-400 font-medium">
+                Showing Preview <span className="font-semibold text-gray-700">{previewData.length}</span> of <span className="font-semibold text-gray-700">{meta.total}</span> leads
+              </p>
+              {meta.totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchPreviewData(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 bg-white rounded-lg"
+                  >
+                    <ChevronLeft className="h-4 w-4 text-gray-500" />
                   </Button>
-                );
-              })}
-              <Button variant="outline" size="sm" onClick={() => fetchPreviewData(currentPage + 1)} disabled={currentPage >= meta.totalPages} className="h-7 w-7 p-0 border-gray-200">
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
+                  {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
+                    let p: number;
+                    if (meta.totalPages <= 5) p = i + 1;
+                    else if (currentPage <= 3) p = i + 1;
+                    else if (currentPage >= meta.totalPages - 2) p = meta.totalPages - 4 + i;
+                    else p = currentPage - 2 + i;
+                    const isCurrent = p === currentPage;
+                    return (
+                      <Button
+                        key={p}
+                        variant={isCurrent ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => fetchPreviewData(p)}
+                        className={cn(
+                          "h-8 w-8 p-0 text-xs font-semibold rounded-lg transition-all",
+                          isCurrent
+                            ? "bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
+                            : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                        )}
+                      >
+                        {p}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchPreviewData(currentPage + 1)}
+                    disabled={currentPage >= meta.totalPages}
+                    className="h-8 w-8 p-0 border-gray-200 hover:bg-gray-50 bg-white rounded-lg"
+                  >
+                    <ChevronRight className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </div>
+              )}
             </div>
-          </div>
+          </>
         )}
       </div>
+
     </div>
   );
 }

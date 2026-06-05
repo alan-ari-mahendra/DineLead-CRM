@@ -38,13 +38,13 @@ export default function DashboardPage() {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "prospect":
-        return "bg-amber-500/10 text-amber-600 border-amber-500/20";
+        return "bg-sky-50 text-sky-700 border-sky-100";
       case "contacted":
-        return "bg-blue-500/10 text-blue-600 border-blue-500/20";
+        return "bg-amber-50 text-amber-700 border-amber-100";
       case "closed":
-        return "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
+        return "bg-emerald-50 text-emerald-800 border-emerald-100";
       default:
-        return "bg-gray-500/10 text-gray-600 border-gray-500/20";
+        return "bg-gray-50 text-gray-600 border-gray-100";
     }
   };
 
@@ -65,29 +65,59 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { key: "totalRestaurants" as const, label: "Total Restaurants", icon: Building2, bg: "bg-blue-600" },
-    { key: "prospects" as const, label: "Prospects", icon: Target, bg: "bg-violet-600" },
-    { key: "contacted" as const, label: "Contacted", icon: Phone, bg: "bg-orange-500" },
-    { key: "closed" as const, label: "Closed Deals", icon: CheckCircle, bg: "bg-emerald-600" },
+    {
+      key: "totalRestaurants" as const,
+      label: "Total Restaurants",
+      icon: Building2,
+      iconBg: "bg-slate-100",
+      iconColor: "text-slate-600",
+      accentBar: "bg-slate-400",
+    },
+    {
+      key: "prospects" as const,
+      label: "Prospects",
+      icon: Target,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      accentBar: "bg-sky-400",
+    },
+    {
+      key: "contacted" as const,
+      label: "Contacted",
+      icon: Phone,
+      iconBg: "bg-amber-100",
+      iconColor: "text-amber-600",
+      accentBar: "bg-amber-400",
+    },
+    {
+      key: "closed" as const,
+      label: "Closed Deals",
+      icon: CheckCircle,
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-700",
+      accentBar: "bg-emerald-500",
+    },
   ];
 
+  /* ── Shared card class ── */
+  const bentoCard = "bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.08)] transition-shadow duration-200";
+
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div className="min-h-screen bg-[#F8F9FA] p-5 md:p-6 lg:p-8">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Your restaurant pipeline at a glance
-          </p>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Your restaurant pipeline at a glance</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setIsScrapingModalOpen(true)}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm h-8 px-3 text-xs font-semibold"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
             Scrape Data
           </Button>
           <Button
@@ -95,307 +125,308 @@ export default function DashboardPage() {
             variant="outline"
             size="sm"
             disabled={isLoading}
-            className="shadow-sm"
+            className="shadow-sm border-gray-200 h-8 w-8 p-0"
           >
             {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-3.5 w-3.5" />
             )}
           </Button>
         </div>
       </div>
 
+      {/* ── Error Banner ── */}
       {error && (
-        <Card className="border-red-200 bg-red-50 mb-6">
-          <CardContent className="py-4">
-            <p className="text-red-700 text-sm text-center">
-              Failed to load data.{" "}
-              <button onClick={refreshData} className="underline font-medium">Retry</button>
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-5 text-sm text-red-700 flex items-center gap-2">
+          <span>Failed to load data.</span>
+          <button onClick={refreshData} className="underline font-semibold">Retry</button>
+        </div>
       )}
 
-      {/* Stats Row - Dashboard 2 Style */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+      {/* ══════════════════════════════════════════
+          ROW 1 — Stats Bento (4 equal cards)
+      ══════════════════════════════════════════ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {stats.map((stat) => {
           const data = dashboardData?.stats[stat.key];
           const trend = trendValue(data?.trend);
           return (
-            <div
-              key={stat.key}
-              className="group relative p-4 rounded-xl border border-gray-100 bg-white hover:border-gray-200 transition-all hover:shadow-sm"
-            >
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-1.5 h-1.5 rounded-full ${stat.bg}`} />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  {stat.label}
-                </span>
-              </div>
-              <div className="flex items-end justify-between">
-                <span className="text-3xl font-bold text-gray-900 tabular-nums">
-                  {isLoading ? (
-                    <div className="h-8 w-14 bg-gray-100 rounded animate-pulse" />
-                  ) : (
-                    data?.value.toLocaleString() || "0"
-                  )}
-                </span>
+            <div key={stat.key} className={`${bentoCard} p-5`}>
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-9 h-9 rounded-xl ${stat.iconBg} flex items-center justify-center`}>
+                  <stat.icon className={`h-4.5 w-4.5 ${stat.iconColor}`} style={{ width: '18px', height: '18px' }} />
+                </div>
                 {data && (
-                  <span className={`inline-flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-md ${
+                  <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded-md ${
                     trend.isPositive
                       ? "text-emerald-700 bg-emerald-50"
-                      : "text-red-700 bg-red-50"
+                      : "text-red-600 bg-red-50"
                   }`}>
-                    {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {trend.isPositive
+                      ? <TrendingUp className="h-3 w-3" />
+                      : <TrendingDown className="h-3 w-3" />}
                     {trend.value}%
                   </span>
                 )}
               </div>
+              <div className="text-2xl font-bold text-gray-900 tabular-nums mb-0.5">
+                {isLoading ? (
+                  <div className="h-7 w-14 bg-gray-100 rounded-lg animate-pulse" />
+                ) : (
+                  data?.value.toLocaleString() ?? "0"
+                )}
+              </div>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">{stat.label}</p>
+              {/* Accent bottom bar */}
+              <div className={`mt-4 h-0.5 w-8 ${stat.accentBar} rounded-full`} />
             </div>
           );
         })}
       </div>
 
-      {/* Main Content Grid - Dashboard 1 Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Summary + Quick Actions - spans 1 col */}
-        <div className="space-y-4">
+      {/* ══════════════════════════════════════════
+          ROW 2 — Bento Main Grid (12-col)
+          [Left 4] [Center 4] [Right 4]
+      ══════════════════════════════════════════ */}
+      <div className="grid grid-cols-12 gap-4">
+
+        {/* ── LEFT COLUMN (col-span-4) ── */}
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+
           {/* Conversion Rate */}
-          <Card className="border-0 shadow-sm bg-white overflow-hidden">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-500">Conversion Rate</p>
-                <BarChart3 className="h-4 w-4 text-gray-400" />
-              </div>
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-bold text-gray-900">
-                  {isLoading ? (
-                    <div className="h-10 w-16 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    `${dashboardData?.summary.conversionRate || 0}%`
-                  )}
-                </span>
-                <span className="text-sm text-gray-500 mb-1">closed</span>
-              </div>
-              {dashboardData && (
-                <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.min(dashboardData.summary.conversionRate, 100)}%` }}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Avg Rating */}
-          <Card className="border-0 shadow-sm bg-white">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-500">Average Rating</p>
-                <Star className="h-4 w-4 text-amber-400" />
-              </div>
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-bold text-gray-900">
-                  {isLoading ? (
-                    <div className="h-10 w-12 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    dashboardData?.summary.averageRating || "0"
-                  )}
-                </span>
-                <div className="flex items-center gap-0.5 mb-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`h-3.5 w-3.5 ${
-                        star <= Math.round(dashboardData?.summary.averageRating || 0)
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-gray-200"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Leads */}
-          <Card className="border-0 shadow-sm bg-white">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-500">Total Leads</p>
-                <Utensils className="h-4 w-4 text-gray-400" />
-              </div>
-              <div className="text-4xl font-bold text-gray-900">
+          <div className={`${bentoCard} p-6`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Conversion Rate</p>
+              <BarChart3 className="h-4 w-4 text-gray-300" />
+            </div>
+            <div className="flex items-baseline gap-1.5 mb-3">
+              <span className="text-4xl font-bold text-gray-900">
                 {isLoading ? (
-                  <div className="h-10 w-16 bg-gray-200 rounded animate-pulse" />
+                  <div className="h-10 w-16 bg-gray-100 rounded-lg animate-pulse inline-block" />
                 ) : (
-                  dashboardData?.summary.totalLeads.toLocaleString() || "0"
+                  `${dashboardData?.summary.conversionRate ?? 0}%`
+                )}
+              </span>
+              <span className="text-sm text-gray-400 mb-0.5">closed</span>
+            </div>
+            {dashboardData && (
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${Math.min(dashboardData.summary.conversionRate, 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Average Rating + Total Leads — side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className={`${bentoCard} p-5`}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Avg Rating</p>
+                <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">
+                {isLoading ? (
+                  <div className="h-8 w-10 bg-gray-100 rounded-lg animate-pulse" />
+                ) : (
+                  dashboardData?.summary.averageRating ?? "—"
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-1">restaurants in database</p>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="border-0 shadow-sm bg-white">
-            <CardContent className="p-5">
-              <p className="text-sm font-medium text-gray-500 mb-3">Quick Actions</p>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: "Restaurants", icon: Database, onClick: () => router.push("/restaurants") },
-                  { label: "Export", icon: FileText, onClick: () => router.push("/export") },
-                  { label: "Scrape", icon: Zap, onClick: () => setIsScrapingModalOpen(true) },
-                  { label: "Settings", icon: Settings, onClick: () => router.push("/settings") },
-                ].map((action) => (
-                  <button
-                    key={action.label}
-                    onClick={action.onClick}
-                    className="flex items-center gap-2 p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-colors text-left"
-                  >
-                    <action.icon className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs font-medium text-gray-700">{action.label}</span>
-                  </button>
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`h-3 w-3 ${
+                      star <= Math.round(dashboardData?.summary.averageRating ?? 0)
+                        ? "text-amber-400 fill-amber-400"
+                        : "text-gray-200"
+                    }`}
+                  />
                 ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className={`${bentoCard} p-5`}>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Total Leads</p>
+                <Utensils className="h-3.5 w-3.5 text-gray-300" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">
+                {isLoading ? (
+                  <div className="h-8 w-12 bg-gray-100 rounded-lg animate-pulse" />
+                ) : (
+                  dashboardData?.summary.totalLeads.toLocaleString() ?? "0"
+                )}
+              </div>
+              <p className="text-[11px] text-gray-400">in database</p>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className={`${bentoCard} p-5`}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Quick Actions</p>
+              <Zap className="h-3.5 w-3.5 text-gray-300" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Restaurants", icon: Database, onClick: () => router.push("/restaurants"), color: "text-slate-600" },
+                { label: "Export", icon: FileText, onClick: () => router.push("/export"), color: "text-sky-600" },
+                { label: "Scrape", icon: Zap, onClick: () => setIsScrapingModalOpen(true), color: "text-emerald-700" },
+                { label: "Settings", icon: Settings, onClick: () => router.push("/settings"), color: "text-gray-500" },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  onClick={action.onClick}
+                  className="flex items-center gap-2 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-all text-left group"
+                >
+                  <action.icon className={`h-4 w-4 ${action.color} group-hover:scale-110 transition-transform`} />
+                  <span className="text-xs font-semibold text-gray-600">{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Recent Leads - spans 1 col */}
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-500">Recent Leads</CardTitle>
+        {/* ── CENTER COLUMN — Recent Leads (col-span-4) ── */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className={`${bentoCard} p-6 h-full flex flex-col`}>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-800">Recent Leads</h2>
+                <p className="text-[11px] text-gray-400 mt-0.5">Latest restaurant prospects</p>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-blue-600 hover:text-blue-700 h-auto p-0"
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 h-7 px-2 rounded-lg"
                 onClick={() => router.push("/restaurants")}
               >
                 View all
                 <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="animate-pulse flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-gray-200" />
+
+            <div className="flex-1 space-y-1">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-center gap-3 p-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gray-100 flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="h-3.5 bg-gray-200 rounded w-3/4 mb-1.5" />
-                      <div className="h-3 bg-gray-200 rounded w-1/2" />
+                      <div className="h-3.5 bg-gray-100 rounded w-3/4 mb-1.5" />
+                      <div className="h-3 bg-gray-100 rounded w-1/2" />
                     </div>
+                    <div className="h-5 w-16 bg-gray-100 rounded-full" />
                   </div>
-                ))}
-              </div>
-            ) : dashboardData?.recentLeads && dashboardData.recentLeads.length > 0 ? (
-              <div className="space-y-1">
-                {dashboardData.recentLeads.map((lead) => (
+                ))
+              ) : dashboardData?.recentLeads && dashboardData.recentLeads.length > 0 ? (
+                dashboardData.recentLeads.map((lead) => (
                   <div
                     key={lead.id}
-                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
-                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center flex-shrink-0 shadow-sm">
                       <span className="text-white text-xs font-bold">
                         {lead.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                      <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-emerald-700 transition-colors">
                         {lead.name}
                       </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-gray-500 truncate">{lead.company}</span>
-                        <span className="text-gray-300">·</span>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Star className="h-3 w-3 text-amber-400 fill-amber-400 mr-0.5" />
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-gray-400 truncate">{lead.company}</span>
+                        <span className="text-gray-200">·</span>
+                        <div className="flex items-center text-[11px] text-gray-400">
+                          <Star className="h-2.5 w-2.5 text-amber-400 fill-amber-400 mr-0.5" />
                           {lead.rating}
                         </div>
                       </div>
                     </div>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 ${getStatusColor(lead.status)}`}>
+                    <Badge className={`text-[10px] px-2 py-0.5 h-5 border font-medium rounded-full ${getStatusColor(lead.status)}`}>
                       {lead.status}
                     </Badge>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 text-gray-400">
-                <Building2 className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No leads yet</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Activities - spans 1 col */}
-        <Card className="border-0 shadow-sm bg-white">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-gray-500">Activity Feed</CardTitle>
-              <Activity className="h-4 w-4 text-gray-400" />
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+                  <Building2 className="h-10 w-10 mb-3" />
+                  <p className="text-sm font-medium text-gray-400">No leads yet</p>
+                  <p className="text-xs text-gray-300 mt-0.5">Start scraping to see prospects</p>
+                </div>
+              )}
             </div>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="animate-pulse flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-200" />
+          </div>
+        </div>
+
+        {/* ── RIGHT COLUMN — Activity Feed (col-span-4) ── */}
+        <div className="col-span-12 lg:col-span-4">
+          <div className={`${bentoCard} p-6 h-full flex flex-col`}>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-800">Activity Feed</h2>
+                <p className="text-[11px] text-gray-400 mt-0.5">Recent team interactions</p>
+              </div>
+              <Activity className="h-4 w-4 text-gray-300" />
+            </div>
+
+            <div className="flex-1">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-start gap-3 p-2.5">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="h-3.5 bg-gray-200 rounded w-3/4 mb-1.5" />
-                      <div className="h-3 bg-gray-200 rounded w-full" />
+                      <div className="h-3.5 bg-gray-100 rounded w-3/4 mb-1.5" />
+                      <div className="h-3 bg-gray-100 rounded w-full" />
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : dashboardData?.recentActivities && dashboardData.recentActivities.length > 0 ? (
-              <div className="relative">
-                {/* Timeline line */}
-                <div className="absolute left-[15px] top-3 bottom-3 w-px bg-gray-100" />
-                <div className="space-y-1">
-                  {dashboardData.recentActivities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors relative"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center text-sm flex-shrink-0 relative z-10">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                ))
+              ) : dashboardData?.recentActivities && dashboardData.recentActivities.length > 0 ? (
+                <div className="relative">
+                  {/* Timeline line */}
+                  <div className="absolute left-[15px] top-4 bottom-4 w-px bg-gray-100" />
+                  <div className="space-y-0.5">
+                    {dashboardData.recentActivities.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-gray-50 transition-colors relative"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-white border-2 border-gray-100 flex items-center justify-center text-sm flex-shrink-0 relative z-10 shadow-sm">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">
                             {activity.activity}
                           </p>
-                        </div>
-                        <p className="text-xs text-gray-500 line-clamp-1">
-                          {activity.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-gray-400">{activity.leadName}</span>
-                          <span className="text-gray-200">·</span>
-                          <span className="text-[10px] text-gray-400 flex items-center">
-                            <Clock className="h-2.5 w-2.5 mr-0.5" />
-                            {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                          </span>
+                          <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">
+                            {activity.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-gray-400 font-medium">{activity.leadName}</span>
+                            <span className="text-gray-200">·</span>
+                            <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                              <Clock className="h-2.5 w-2.5" />
+                              {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-10 text-gray-400">
-                <Activity className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No activity yet</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-gray-300">
+                  <Activity className="h-10 w-10 mb-3" />
+                  <p className="text-sm font-medium text-gray-400">No activity yet</p>
+                  <p className="text-xs text-gray-300 mt-0.5">Activities appear as you work leads</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <ScrapingModal isOpen={isScrapingModalOpen} onClose={() => setIsScrapingModalOpen(false)} />
