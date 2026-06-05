@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { RegisterForm } from "@/components/auth/register-form";
 import Image from "next/image";
 import { Building2, BarChart3, Download } from "lucide-react";
@@ -124,7 +125,25 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <RegisterForm />
+          <Suspense fallback={
+            <div className="space-y-4 animate-pulse">
+              <div className="space-y-1">
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-11 bg-gray-100 rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-11 bg-gray-100 rounded-xl" />
+              </div>
+              <div className="space-y-1">
+                <div className="h-4 w-20 bg-gray-200 rounded" />
+                <div className="h-11 bg-gray-100 rounded-xl" />
+              </div>
+              <div className="h-11 bg-gray-200 rounded-xl mt-4" />
+            </div>
+          }>
+            <RegisterForm />
+          </Suspense>
         </div>
       </div>
     </div>
