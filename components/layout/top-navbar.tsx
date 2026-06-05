@@ -20,7 +20,7 @@ export function TopNavbar() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-100 px-6 py-3">
+    <header className="bg-white border-b border-gray-100 px-6 py-[21px]">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="relative">
