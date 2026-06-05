@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Eye, Edit, Download, Loader2 } from "lucide-react";
+import { MoreHorizontal, Eye, Edit, Download, Loader2, Star } from "lucide-react";
 import { RestaurantDetailModal } from "@/components/modals/restaurant-detail-modal";
 import { MetaPagination } from "@/types/paginationMeta.type";
 import { Restaurant } from "@/types/restaurant.type";
@@ -75,9 +75,9 @@ export function RestaurantTable({
 
   const getStatusBadge = (status?: string) => {
     const variants = {
-      prospect: "bg-blue-100 text-blue-800 border-blue-200",
-      contacted: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      closed: "bg-green-100 text-green-800 border-green-200",
+      prospect: "bg-sky-50 text-sky-700 border border-sky-100",
+      contacted: "bg-amber-50 text-amber-700 border border-amber-100",
+      closed: "bg-emerald-50 text-emerald-800 border border-emerald-100",
     };
     return variants[status as keyof typeof variants] || variants.prospect;
   };
@@ -137,10 +137,10 @@ export function RestaurantTable({
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="border border-border rounded-lg">
+        <div className="bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-gray-50/60 hover:bg-gray-50/60">
                 <TableHead className="w-12">
                   <Checkbox disabled />
                 </TableHead>
@@ -158,27 +158,24 @@ export function RestaurantTable({
                     <Checkbox disabled />
                   </TableCell>
                   <TableCell>
-                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-4 bg-gray-100 rounded-md w-3/4 animate-pulse" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+                    <div className="h-4 bg-gray-100 rounded-md w-full animate-pulse" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+                    <div className="h-4 bg-gray-100 rounded-md w-1/2 animate-pulse" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-6 bg-gray-200 rounded w-20 animate-pulse" />
+                    <div className="h-5 bg-gray-100 rounded-full w-20 animate-pulse" />
                   </TableCell>
                   <TableCell>
-                    <div className="h-8 bg-gray-200 rounded w-8 animate-pulse" />
+                    <div className="h-7 bg-gray-100 rounded-lg w-7 animate-pulse" />
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </div>
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -188,21 +185,21 @@ export function RestaurantTable({
     <>
       <div className="space-y-4">
         {selectedRestaurants.length > 0 && (
-          <div className="flex items-center justify-between bg-muted p-4 rounded-lg">
-            <span className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 px-4 py-3 rounded-xl">
+            <span className="text-sm font-medium text-emerald-800">
               {selectedRestaurants.length} restaurant(s) selected
             </span>
-            <Button onClick={handleExportSelected} size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
+            <Button onClick={handleExportSelected} size="sm" variant="outline" className="border-emerald-200 text-emerald-800 hover:bg-emerald-100 h-7 text-xs">
+              <Download className="h-3.5 w-3.5 mr-1.5" />
               Export Selected
             </Button>
           </div>
         )}
 
-        <div className="border border-border rounded-lg">
+        <div className="bg-white rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-gray-50/60 hover:bg-gray-50/60 border-b border-gray-100">
                 <TableHead className="w-12">
                   <Checkbox
                     checked={
@@ -212,12 +209,12 @@ export function RestaurantTable({
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Restaurant Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12">Actions</TableHead>
+                <TableHead className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Restaurant Name</TableHead>
+                <TableHead className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Address</TableHead>
+                <TableHead className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Phone</TableHead>
+                <TableHead className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Rating</TableHead>
+                <TableHead className="font-semibold text-gray-500 text-xs uppercase tracking-wide">Status</TableHead>
+                <TableHead className="w-12 font-semibold text-gray-500 text-xs uppercase tracking-wide">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,14 +222,14 @@ export function RestaurantTable({
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
+                    className="text-center py-12 text-gray-400 text-sm"
                   >
                     No restaurants found matching your filters
                   </TableCell>
                 </TableRow>
               ) : (
                 restaurant.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow key={r.id} className="hover:bg-[#F8F9FA] border-b border-gray-50 transition-colors">
                     <TableCell>
                       <Checkbox
                         checked={selectedRestaurants.includes(r.id)}
@@ -241,27 +238,27 @@ export function RestaurantTable({
                         }
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="font-semibold text-gray-800 text-sm">{r.name}</TableCell>
+                    <TableCell className="text-gray-500 text-sm">
                       {r.address}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-gray-500 text-sm">
                       {r.phone}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center">
-                        <span className="text-yellow-500 mr-1">★</span>
-                        {r.rating}
-                        <span className="text-muted-foreground text-xs ml-1">
-                          ({r.reviewCount} reviews)
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                        <span className="text-sm font-medium text-gray-700">{r.rating}</span>
+                        <span className="text-gray-300 text-xs ml-0.5">
+                          ({r.reviewCount})
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={getStatusBadge(
+                        className={`rounded-full text-[11px] font-medium px-2.5 py-0.5 ${getStatusBadge(
                           r.leadStatus.name.toLowerCase()
-                        )}
+                        )}`}
                       >
                         {r.leadStatus.name}
                       </Badge>

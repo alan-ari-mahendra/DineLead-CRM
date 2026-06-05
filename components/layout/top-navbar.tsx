@@ -20,7 +20,7 @@ export function TopNavbar() {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-100 px-6 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="relative">
@@ -28,24 +28,22 @@ export function TopNavbar() {
             <input
               type="text"
               placeholder="Search restaurants..."
-              className="pl-10 pr-4 py-2 w-80 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-72 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-500 focus:bg-white transition-all"
             />
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="relative">
-            <Bell className="h-5 w-5 text-gray-600" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-              3
-            </span>
+        <div className="flex items-center space-x-2">
+          <Button variant="ghost" size="sm" className="relative h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full ring-1 ring-white" />
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white text-xs font-semibold">
                     JD
                   </AvatarFallback>
                 </Avatar>
@@ -54,15 +52,15 @@ export function TopNavbar() {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <div className="flex items-center justify-start gap-2 p-2">
                 <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">John Doe</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">john.doe@example.com</p>
+                  <p className="font-medium text-sm">John Doe</p>
+                  <p className="w-[200px] truncate text-xs text-muted-foreground">john.doe@example.com</p>
                 </div>
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Log out</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600">Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

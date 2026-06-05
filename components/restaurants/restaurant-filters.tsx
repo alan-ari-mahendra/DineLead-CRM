@@ -95,7 +95,7 @@ export function RestaurantFilters({
     filters.industry !== "all";
 
   return (
-    <div className="bg-card p-4 rounded-lg border border-border space-y-4">
+    <div className="bg-white p-5 rounded-2xl shadow-[0_1px_4px_rgba(0,0,0,0.06)] space-y-4">
       {filterLoadError && (
         <p className="text-sm text-destructive">Failed to load filter options. Refresh to retry.</p>
       )}
@@ -211,25 +211,25 @@ export function RestaurantFilters({
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
-        <div className="flex flex-wrap gap-2 pt-2 border-t">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
+        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+          <span className="text-sm font-medium text-gray-400">Active filters:</span>
           {filters.search && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
               Search: "{filters.search}"
             </span>
           )}
           {filters.status !== "all" && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800">
               Status: {filters.status}
             </span>
           )}
           {filters.rating !== "all" && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-800">
               Rating: {filters.rating}+ stars
             </span>
           )}
           {filters.industry !== "all" && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-800">
               Industry: {filters.industry}
             </span>
           )}
