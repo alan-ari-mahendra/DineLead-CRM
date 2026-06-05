@@ -29,26 +29,35 @@ export function Sidebar() {
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
-        {!collapsed && (
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-700 flex items-center justify-center flex-shrink-0">
-              <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={20} height={20} className="rounded" />
+      <div className={cn("flex items-center border-b border-gray-100 py-4 transition-all duration-300", collapsed ? "px-3 justify-center" : "px-4 justify-between")}>
+        {collapsed ? (
+          <button 
+            onClick={() => setCollapsed(false)}
+            className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+          >
+            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={64} height={64} />
+          </button>
+        ) : (
+          <>
+            <div className="flex items-center space-x-2.5">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0">
+                <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={64} height={64} />
+              </div>
+              <div>
+                <span className="font-bold text-gray-900 text-sm tracking-tight">DineLead</span>
+                <p className="text-[10px] text-emerald-700 font-semibold leading-none mt-0.5 uppercase tracking-wider">CRM</p>
+              </div>
             </div>
-            <div>
-              <span className="font-bold text-gray-900 text-sm tracking-tight">DineLead</span>
-              <p className="text-[10px] text-emerald-700 font-semibold leading-none mt-0.5 uppercase tracking-wider">CRM</p>
-            </div>
-          </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCollapsed(true)}
+              className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600 ml-auto shrink-0"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </Button>
+          </>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-7 w-7 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600 ml-auto shrink-0"
-        >
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-        </Button>
       </div>
 
       {/* Navigation */}
