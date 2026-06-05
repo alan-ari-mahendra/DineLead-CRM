@@ -241,6 +241,29 @@ export default function RestaurantsPage() {
                   Export {selectedRestaurants.length}
                 </Button>
               )}
+
+              {/* View Switcher */}
+              <div className="flex items-center border border-gray-200 rounded-lg p-0.5 bg-gray-50/50 mr-1 shrink-0">
+                <Button
+                  variant={viewMode === "table" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleToggleViewMode("table")}
+                  className={`h-7 px-2.5 text-xs ${viewMode === "table" ? "bg-white shadow-sm text-emerald-800 font-semibold" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  <List className="h-3.5 w-3.5 mr-1" />
+                  Table
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => handleToggleViewMode("grid")}
+                  className={`h-7 px-2.5 text-xs ${viewMode === "grid" ? "bg-white shadow-sm text-emerald-800 font-semibold" : "text-gray-500 hover:text-gray-900"}`}
+                >
+                  <LayoutGrid className="h-3.5 w-3.5 mr-1" />
+                  Bento Grid
+                </Button>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -653,7 +676,7 @@ export default function RestaurantsPage() {
                 return (
                   <Button
                     key={page}
-                    variant={page === metaPagination.page ? "default" : "ghost"}
+                    variant={page === metaPagination.page ? "default" : "outline"}
                     size="sm"
                     onClick={() => handlePageChange(page)}
                     className={`h-7 w-7 p-0 text-xs rounded-lg ${
