@@ -111,12 +111,12 @@ function ScrapingJobsContent() {
   const completedJobs = jobs.filter(j => j.status === "COMPLETED" || j.status === "FAILED");
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-4 md:p-6 lg:p-8">
+    <div className="page-bg min-h-screen p-4 md:p-6 lg:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Scraping Jobs</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-400 mt-0.5">
             {meta.total} total jobs · {runningJobs.length} active
           </p>
         </div>
@@ -124,12 +124,12 @@ function ScrapingJobsContent() {
           <Button
             onClick={() => setIsScrapingModalOpen(true)}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm gap-1.5"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-4 w-4" />
             New Scrape
           </Button>
-          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing} className="shadow-sm">
+          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={isRefreshing} className="border-gray-200 shadow-sm">
             {isRefreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           </Button>
         </div>
@@ -138,26 +138,26 @@ function ScrapingJobsContent() {
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 animate-pulse">
+            <div key={i} className="bento-card p-5 animate-pulse">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-gray-200" />
+                <div className="w-10 h-10 rounded-xl bg-gray-100" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <div className="h-4 bg-gray-100 rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-gray-100 rounded w-1/4" />
                 </div>
-                <div className="h-6 bg-gray-200 rounded w-20" />
+                <div className="h-6 bg-gray-100 rounded w-20" />
               </div>
             </div>
           ))}
         </div>
       ) : jobs.length === 0 ? (
         <div className="text-center py-20">
-          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-4">
             <SearchIcon className="h-8 w-8 text-gray-300" />
           </div>
-          <p className="text-lg font-medium text-gray-500">No scraping jobs yet</p>
-          <p className="text-sm text-gray-400 mt-1 mb-4">Start by creating your first scraping job</p>
-          <Button onClick={() => setIsScrapingModalOpen(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+          <p className="text-lg font-medium text-gray-400">No scraping jobs yet</p>
+          <p className="text-sm text-gray-300 mt-1 mb-4">Start by creating your first scraping job</p>
+          <Button onClick={() => setIsScrapingModalOpen(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white">
             <Plus className="h-4 w-4 mr-1.5" /> New Scrape
           </Button>
         </div>
@@ -166,20 +166,20 @@ function ScrapingJobsContent() {
           {/* Active Jobs */}
           {runningJobs.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Active</h2>
+              <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Active</h2>
               <div className="space-y-3">
                 {runningJobs.map((job) => {
                   const status = getStatusConfig(job.status);
                   return (
                     <Link key={job.id} href={`/scraping-jobs/${job.id}`} className="block group">
-                      <div className={`bg-white rounded-xl border-2 ${status.border} p-5 hover:shadow-md transition-all`}>
+                      <div className={`bento-card p-5 border-l-4 ${status.border} hover:shadow-md transition-all`}>
                         <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-lg ${status.bg} flex items-center justify-center`}>
+                          <div className={`w-10 h-10 rounded-xl ${status.bg} flex items-center justify-center`}>
                             <status.icon className={`h-5 w-5 ${status.color}`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                              <h3 className="text-sm font-semibold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">
                                 {job.keyword}
                               </h3>
                               <div className="flex items-center gap-1">
@@ -188,10 +188,10 @@ function ScrapingJobsContent() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3 mt-1">
-                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                              <span className="flex items-center gap-1 text-xs text-gray-400">
                                 <MapPin className="h-3 w-3" /> {job.location}
                               </span>
-                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                              <span className="flex items-center gap-1 text-xs text-gray-400">
                                 <Clock className="h-3 w-3" /> {formatDate(job.createdAt)}
                               </span>
                             </div>
@@ -208,19 +208,19 @@ function ScrapingJobsContent() {
           {/* Completed Jobs */}
           {completedJobs.length > 0 && (
             <div>
-              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">History</h2>
+              <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">History</h2>
               <div className="space-y-2">
                 {completedJobs.map((job) => {
                   const status = getStatusConfig(job.status);
                   return (
                     <Link key={job.id} href={`/scraping-jobs/${job.id}`} className="block group">
-                      <div className="bg-white rounded-xl border border-gray-100 p-4 hover:shadow-sm hover:border-gray-200 transition-all">
+                      <div className="bento-card p-4 group-hover:shadow-md transition-all">
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg ${status.bg} flex items-center justify-center flex-shrink-0`}>
+                          <div className={`w-8 h-8 rounded-xl ${status.bg} flex items-center justify-center flex-shrink-0`}>
                             <status.icon className={`h-4 w-4 ${status.color}`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                            <h3 className="text-sm font-medium text-gray-800 truncate group-hover:text-emerald-700 transition-colors">
                               {job.keyword}
                             </h3>
                             <span className="text-xs text-gray-400">{job.location}</span>
@@ -234,7 +234,7 @@ function ScrapingJobsContent() {
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-                            <span className="text-xs text-gray-500">{status.label}</span>
+                            <span className="text-xs text-gray-400">{status.label}</span>
                           </div>
                         </div>
                       </div>
@@ -254,7 +254,7 @@ function ScrapingJobsContent() {
             Page {page} of {meta.lastPage} · {meta.total} jobs
           </p>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={() => handlePageChange(page - 1)} disabled={page <= 1} className="h-8 w-8 p-0">
+            <Button variant="outline" size="sm" onClick={() => handlePageChange(page - 1)} disabled={page <= 1} className="h-8 w-8 p-0 border-gray-200 rounded-lg">
               <ChevronLeft className="h-4 w-4" />
             </Button>
             {Array.from({ length: Math.min(meta.lastPage, 5) }, (_, i) => {
@@ -265,12 +265,12 @@ function ScrapingJobsContent() {
               else p = page - 2 + i;
               return (
                 <Button key={p} variant={p === page ? "default" : "outline"} size="sm" onClick={() => handlePageChange(p)}
-                  className={`h-8 w-8 p-0 text-xs ${p === page ? "bg-gray-900 text-white" : ""}`}>
+                  className={`h-8 w-8 p-0 text-xs rounded-lg ${p === page ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600" : "border-gray-200"}`}>
                   {p}
                 </Button>
               );
             })}
-            <Button variant="outline" size="sm" onClick={() => handlePageChange(page + 1)} disabled={page >= meta.lastPage} className="h-8 w-8 p-0">
+            <Button variant="outline" size="sm" onClick={() => handlePageChange(page + 1)} disabled={page >= meta.lastPage} className="h-8 w-8 p-0 border-gray-200 rounded-lg">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

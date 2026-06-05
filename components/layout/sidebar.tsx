@@ -24,49 +24,101 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300",
+        "flex flex-col h-screen bg-white border-r border-gray-100 transition-all duration-300",
         collapsed ? "w-16" : "w-64",
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      {/* Header / Logo */}
+      <div className="flex items-center justify-between px-4 py-5 border-b border-gray-100">
         {!collapsed && (
-          <div className="flex items-center space-x-2">
-            <Image src="/favicon-DL-removebg-preview.png" alt="DineLead" width={40} height={40} className="rounded-lg" />
-            <span className="font-bold text-gray-900">DineLead</span>
+          <div className="flex items-center space-x-2.5">
+            <Image
+              src="/favicon-DL-removebg-preview.png"
+              alt="DineLead"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
+            <div className="flex flex-col">
+              <span className="font-bold text-gray-900 text-sm leading-tight">DineLead</span>
+              <span className="text-[10px] text-emerald-600 font-medium tracking-wide uppercase">CRM</span>
+            </div>
           </div>
+        )}
+        {collapsed && (
+          <Image
+            src="/favicon-DL-removebg-preview.png"
+            alt="DineLead"
+            width={28}
+            height={28}
+            className="rounded-lg mx-auto"
+          />
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 p-0 hover:bg-gray-100"
+          className={cn(
+            "h-7 w-7 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors",
+            collapsed && "mx-auto mt-2",
+          )}
         >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
         </Button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
+        {!collapsed && (
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">
+            Main Menu
+          </p>
+        )}
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
           return (
             <Button
               key={item.name}
               variant="ghost"
               className={cn(
-                "w-full justify-start h-11 px-3 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors",
-                isActive && "bg-blue-50 text-blue-700 hover:bg-blue-50 hover:text-blue-700",
+                "w-full h-10 px-3 rounded-lg text-sm font-medium transition-all duration-150",
+                "text-gray-500 hover:text-gray-800 hover:bg-gray-50",
+                isActive && [
+                  "bg-emerald-50 text-emerald-700",
+                  "hover:bg-emerald-50 hover:text-emerald-700",
+                ],
                 collapsed && "justify-center px-0",
+                !collapsed && "justify-start",
               )}
               onClick={() => router.push(item.href)}
             >
-              <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
-              {!collapsed && <span className="font-medium">{item.name}</span>}
+              <item.icon
+                className={cn(
+                  "h-4 w-4 flex-shrink-0",
+                  !collapsed && "mr-2.5",
+                  isActive ? "text-emerald-600" : "text-gray-400",
+                )}
+              />
+              {!collapsed && <span>{item.name}</span>}
+              {!collapsed && isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              )}
             </Button>
           )
         })}
       </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="px-3 pb-4">
+          <div className="px-3 py-3 rounded-xl bg-emerald-50 border border-emerald-100">
+            <p className="text-xs font-medium text-emerald-700">B2B Lead Gen</p>
+            <p className="text-[10px] text-emerald-600 mt-0.5 leading-relaxed">
+              Find & convert restaurant leads efficiently
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
