@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { RegisterForm } from "@/components/auth/register-form"
 
 export default function RegisterPage() {
@@ -8,7 +9,9 @@ export default function RegisterPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">Restaurant CRM Scraper</h1>
           <p className="text-muted-foreground">Create your account</p>
         </div>
-        <RegisterForm />
+        <Suspense fallback={null}>
+          <RegisterForm />
+        </Suspense>
       </div>
     </div>
   )
