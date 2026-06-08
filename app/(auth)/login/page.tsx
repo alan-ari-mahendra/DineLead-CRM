@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { LoginForm } from "@/components/auth/login-form"
 
 export default function LoginPage() {
@@ -8,7 +9,9 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-foreground mb-2">Restaurant CRM Scraper</h1>
           <p className="text-muted-foreground">Sign in to your account</p>
         </div>
-        <LoginForm />
+        <Suspense fallback={null}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   )
